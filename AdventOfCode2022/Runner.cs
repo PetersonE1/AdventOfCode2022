@@ -20,9 +20,8 @@ namespace AdventOfCode2022
 
         private static void RunDay1(bool firstDay)
         {
-            string input = Extensions.LoadInput(1, firstDay);
-            if (firstDay) Console.WriteLine(Days.Day1.CalculateMostCalories(input));
-            //else Console.WriteLine(Days.Day1.);
+            string input = Extensions.LoadInput("Day1");
+            Console.WriteLine(Days.Day1.CalculateMostCalories(input, firstDay));
         }
     }
 }

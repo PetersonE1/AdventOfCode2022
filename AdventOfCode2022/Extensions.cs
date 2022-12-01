@@ -52,9 +52,9 @@ namespace AdventOfCode2022
             foreach (T item in enumerable) action(item);
         }
 
-        public static string LoadInput(int day, bool first)
+        public static string LoadInput(string fileName)
         {
-            string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\Day{day}-{(first ? 0 : 1)}.txt";
+            string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\{fileName}.txt";
             return File.ReadAllText(file);
         }
     }
