@@ -54,7 +54,7 @@ namespace AdventOfCode2022
 
         public static string LoadInput(int day, bool first)
         {
-            string file = $@"C:\Users\Peter\source\repos\AdventOfCode2022\AdventOfCode2022\Inputs\Day{day}-{(first ? 0 : 1)}.txt";
+            string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\Day{day}-{(first ? 0 : 1)}.txt";
             return File.ReadAllText(file);
         }
     }
