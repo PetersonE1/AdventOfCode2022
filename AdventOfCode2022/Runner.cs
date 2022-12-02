@@ -14,6 +14,7 @@ namespace AdventOfCode2022
             switch (args[0])
             {
                 case "1": RunDay1(isFirst); break;
+                case "2": RunDay2(isFirst); break;
                 default: break;
             }
         }
@@ -22,6 +23,15 @@ namespace AdventOfCode2022
         {
             string input = Extensions.LoadInput("Day1");
             Console.WriteLine(Days.Day1.CalculateMostCalories(input, firstDay));
+        }
+
+        private static void RunDay2(bool firstDay)
+        {
+            string input = Extensions.LoadInput("Day2");
+            if (firstDay)
+                Console.WriteLine(Days.Day2.GameResult(input));
+            else
+                Console.Write(Days.Day2.TrueGameResult(input));
         }
     }
 }
