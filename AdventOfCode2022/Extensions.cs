@@ -52,6 +52,34 @@ namespace AdventOfCode2022
             foreach (T item in enumerable) action(item);
         }
 
+        public static Tuple<T, T> ToTuple<T>(this IEnumerable<T> enumerable)
+        {
+            T[] array = enumerable.ToArray();
+            return new Tuple<T, T>(array[0], array[1]);
+        }
+
+        public static bool Contains(this Range r1, Range r2)
+        {
+            if (r1.Start.Value >= r2.Start.Value && r1.End.Value <= r2.End.Value)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public static bool Overlaps(this Range r1, Range r2)
+        {
+            if ((r1.Start.Value >= r2.Start.Value && r1.Start.Value <= r2.End.Value) || (r1.End.Value >= r2.Start.Value && r1.End.Value <= r2.End.Value))
+            {
+                return true;
+            }
+            if ((r2.Start.Value >= r1.Start.Value && r2.Start.Value <= r1.End.Value) || (r2.End.Value >= r1.Start.Value && r2.End.Value <= r1.End.Value))
+            {
+                return true;
+            }
+            return false;
+        }
+
         public static string LoadInput(string fileName)
         {
             string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\{fileName}.txt";
