@@ -17,6 +17,7 @@ namespace AdventOfCode2022
                 case "2": RunDay2(isFirst); break;
                 case "3": RunDay3(isFirst); break;
                 case "4": RunDay4(isFirst); break;
+                case "5": RunDay5(isFirst); break;
                 default: break;
             }
         }
@@ -52,6 +53,12 @@ namespace AdventOfCode2022
                 Console.WriteLine(Days.Day4.FullyContains(input));
             else
                 Console.WriteLine(Days.Day4.Overlaps(input));
+        }
+
+        private static void RunDay5(bool firstDay)
+        {
+            string input = Extensions.LoadInput("Day5");
+            Console.WriteLine(Days.Day5.CrateEnd(input, firstDay));
         }
     }
 }
