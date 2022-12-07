@@ -80,6 +80,17 @@ namespace AdventOfCode2022
             return false;
         }
 
+        public static T[] CloneExcluding<T>(this T[] array, int[] indexes)
+        {
+            List<T> values = new List<T>();
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (!indexes.Contains(i))
+                    values.Add(array[i]);
+            }
+            return values.ToArray();
+        }
+
         public static string LoadInput(string fileName)
         {
             string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\{fileName}.txt";
