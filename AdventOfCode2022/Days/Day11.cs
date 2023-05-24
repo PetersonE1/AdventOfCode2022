@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
 
 namespace AdventOfCode2022.Days
 {
@@ -50,7 +51,7 @@ namespace AdventOfCode2022.Days
             itemList = itemList.Replace("  Starting items: ", string.Empty);
             foreach (string s in itemList.Split(", "))
             {
-                Item item = new Item(Convert.ToInt32(s));
+                Item item = new Item(BigInteger.Parse(s));
                 items.Add(item);
             }
 
@@ -78,9 +79,9 @@ namespace AdventOfCode2022.Days
 
     internal class Item
     {
-        public int worry;
+        public BigInteger worry;
 
-        public Item(int worry)
+        public Item(BigInteger worry)
         {
             this.worry = worry;
         }
@@ -112,7 +113,7 @@ namespace AdventOfCode2022.Days
             while (items.Count > 0)
             {
                 Item item = items.First();
-                int num = (operationNumber == -1) ? item.worry : operationNumber;
+                BigInteger num = (operationNumber == -1) ? item.worry : operationNumber;
                 if (type == OperationType.Add)
                     item.worry += num;
                 if (type == OperationType.Multiply)
@@ -120,7 +121,7 @@ namespace AdventOfCode2022.Days
                 if (Day11.doDivideStress)
                     item.worry /= 3;
 
-                if ((decimal)item.worry % testNumber == 0)
+                if ((decimal)(item.worry % testNumber) == 0)
                 {
                     monkeys[trueIndex].items.Add(item);
                     items.RemoveAt(0);
@@ -130,7 +131,6 @@ namespace AdventOfCode2022.Days
                     monkeys[falseIndex].items.Add(item);
                     items.RemoveAt(0);
                 }
-
 
                 itemsInspected++;
             }
