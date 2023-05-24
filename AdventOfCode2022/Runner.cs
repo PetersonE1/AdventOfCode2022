@@ -22,6 +22,7 @@ namespace AdventOfCode2022
                 case "7": RunDay7(isFirst); break;
                 case "8": RunDay8(isFirst); break;
                 case "9": RunDay9(isFirst); break;
+                case "10": RunDay10(isFirst); break;
                 default: break;
             }
         }
@@ -96,6 +97,15 @@ namespace AdventOfCode2022
                 Console.WriteLine(Days.Day9.SimulateRope(input, 2));
             else
                 Console.WriteLine(Days.Day9.SimulateRope(input, 10));
+        }
+
+        private static void RunDay10(bool firstDay)
+        {
+            string input = Extensions.LoadInput("Day10");
+            if (firstDay)
+                Console.WriteLine(Days.Day10.SignalStrength(input, 20, 40, 220));
+            else
+                Console.WriteLine(Days.Day10.DrawInput(input));
         }
     }
 }
