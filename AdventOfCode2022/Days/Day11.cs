@@ -10,13 +10,16 @@ namespace AdventOfCode2022.Days
     internal static class Day11
     {
         internal static bool doDivideStress = true;
+        internal static BigInteger superMod = 1;
 
-        public static int MonkeyBusiness(string input, int rounds, bool divideStress)
+        public static BigInteger MonkeyBusiness(string input, int rounds, bool divideStress)
         {
             doDivideStress = divideStress;
             List<Monkey> monkeys = new List<Monkey>();
             foreach (string s in input.Split("\r\n\r\n"))
                 monkeys.Add(ParseMonkey(s));
+            foreach (Monkey monkey in monkeys)
+                superMod *= monkey.testNumber;
 
             for (int i = 0; i < rounds; i++)
             {
@@ -25,7 +28,7 @@ namespace AdventOfCode2022.Days
             }
 
             int index = 0;
-            List<int> itemsInspected = new List<int>();
+            List<BigInteger> itemsInspected = new List<BigInteger>();
             foreach (Monkey monkey in monkeys)
             {
                 itemsInspected.Add(monkey.itemsInspected);
@@ -96,7 +99,7 @@ namespace AdventOfCode2022.Days
         public int trueIndex;
         public int falseIndex;
 
-        public int itemsInspected = 0;
+        public BigInteger itemsInspected = 0;
 
         public Monkey(List<Item> items, int testNumber, int operationNumber, OperationType type, int trueIndex, int falseIndex)
         {
@@ -120,6 +123,7 @@ namespace AdventOfCode2022.Days
                     item.worry *= num;
                 if (Day11.doDivideStress)
                     item.worry /= 3;
+                item.worry %= Day11.superMod;
 
                 if ((decimal)(item.worry % testNumber) == 0)
                 {
