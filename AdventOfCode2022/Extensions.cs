@@ -91,6 +91,20 @@ namespace AdventOfCode2022
             return values.ToArray();
         }
 
+        public static string ToHumanString<T>(this IEnumerable<T> enumerable)
+        {
+            if (enumerable.Count() < 1)
+                return "[]";
+
+            string s = "[";
+            foreach (T item in enumerable)
+            {
+                s += $"{item}, ";
+            }
+            s = s.Remove(s.Length - 2) + "]";
+            return s;
+        }
+
         public static string LoadInput(string fileName)
         {
             string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\{fileName}.txt";

@@ -112,7 +112,10 @@ namespace AdventOfCode2022
         private static void RunDay11(bool firstDay)
         {
             string input = Extensions.LoadInput("Day11T");
-            Console.WriteLine(Days.Day11.MonkeyBusiness(input, 20));
+            if (firstDay)
+                Console.WriteLine(Days.Day11.MonkeyBusiness(input, 20, true));
+            else
+                Console.WriteLine(Days.Day11.MonkeyBusiness(input, 10000, false));
         }
     }
 }

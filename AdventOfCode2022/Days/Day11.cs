@@ -8,8 +8,11 @@ namespace AdventOfCode2022.Days
 {
     internal static class Day11
     {
-        public static int MonkeyBusiness(string input, int rounds)
+        internal static bool doDivideStress = true;
+
+        public static int MonkeyBusiness(string input, int rounds, bool divideStress)
         {
+            doDivideStress = divideStress;
             List<Monkey> monkeys = new List<Monkey>();
             foreach (string s in input.Split("\r\n\r\n"))
                 monkeys.Add(ParseMonkey(s));
@@ -30,7 +33,7 @@ namespace AdventOfCode2022.Days
             }
 
             itemsInspected.Sort();
-            return itemsInspected[0] * itemsInspected[1];
+            return itemsInspected[^1] * itemsInspected[^2];
         }
 
         private static Monkey ParseMonkey(string input)
@@ -44,10 +47,10 @@ namespace AdventOfCode2022.Days
             int falseIndex;
 
             string itemList = lines[1];
-            itemList = itemList.Replace("  Starting Items: ", string.Empty);
+            itemList = itemList.Replace("  Starting items: ", string.Empty);
             foreach (string s in itemList.Split(", "))
             {
-                Item item = new Item(Convert.ToInt32(s));
+                Item item = new Item(Convert.ToInt64(s));
                 items.Add(item);
             }
 
@@ -58,7 +61,7 @@ namespace AdventOfCode2022.Days
                 type = OperationType.Multiply;
 
             string opNum = operation.Split(' ').Last();
-            if (opNum == "old")
+            if (opNum.Contains("old"))
                 operationNum = -1;
             else
                 operationNum = Convert.ToInt32(opNum);
@@ -75,11 +78,71 @@ namespace AdventOfCode2022.Days
 
     internal class Item
     {
-        public int worry;
+        private static readonly long TRILLION = 1000000000000;
+        public long worry;
+        public long counter;
 
-        public Item(int worry)
+        public Item(long worry)
         {
             this.worry = worry;
+        }
+
+        public static Item operator +(Item a, long b) => a.AddValue(b);
+        public static Item operator -(Item a, long b) => a.SubtractValue(b);
+        public static Item operator *(Item a, long b) => a.MultiplyValue(b);
+        public static Item operator /(Item a, long b) => a.DivideValue(b);
+
+        public Item AddValue(long val)
+        {
+            worry += val;
+            while (worry > TRILLION)
+            {
+                counter++;
+                worry -= TRILLION;
+            }
+            return this;
+        }
+
+        public Item SubtractValue(long val)
+        {
+            worry -= val;
+            while (worry < 0 && counter > 0)
+            {
+                worry += TRILLION;
+                counter--;
+            }
+            return this;
+        }
+
+        public Item MultiplyValue(long val)
+        {
+            worry *= val;
+            while (worry > TRILLION)
+            {
+                counter++;
+                worry -= TRILLION;
+            }
+            counter *= val;
+            return this;
+        }
+
+        public Item DivideValue(long val)
+        {
+            decimal overflow = ((decimal)counter / val) - (counter / val);
+            decimal tempWorry = overflow * TRILLION + worry;
+            worry = (long)(tempWorry / val);
+            counter /= val;
+            while (worry > TRILLION)
+            {
+                counter++;
+                worry -= TRILLION;
+            }
+            return this;
+        }
+
+        public override string ToString()
+        {
+            return $"{worry}, {counter}";
         }
     }
 
@@ -109,14 +172,15 @@ namespace AdventOfCode2022.Days
             while (items.Count > 0)
             {
                 Item item = items.First();
-                int num = (testNumber == -1) ? item.worry : testNumber;
+                long num = (operationNumber == -1) ? item.worry : (uint)operationNumber;
                 if (type == OperationType.Add)
-                    item.worry += num;
+                    item += num;
                 if (type == OperationType.Multiply)
-                    item.worry *= num;
-                item.worry /= 3;
+                    item *= num;
+                if (Day11.doDivideStress)
+                    item /= 3;
 
-                if ((double)item.worry % testNumber == 0)
+                if ((decimal)item.worry % testNumber == 0)
                 {
                     monkeys[trueIndex].items.Add(item);
                     items.RemoveAt(0);
@@ -126,6 +190,7 @@ namespace AdventOfCode2022.Days
                     monkeys[falseIndex].items.Add(item);
                     items.RemoveAt(0);
                 }
+
 
                 itemsInspected++;
             }
