@@ -50,7 +50,7 @@ namespace AdventOfCode2022.Days
             itemList = itemList.Replace("  Starting items: ", string.Empty);
             foreach (string s in itemList.Split(", "))
             {
-                Item item = new Item(Convert.ToInt64(s));
+                Item item = new Item(Convert.ToInt32(s));
                 items.Add(item);
             }
 
@@ -78,71 +78,11 @@ namespace AdventOfCode2022.Days
 
     internal class Item
     {
-        private static readonly long TRILLION = 1000000000000;
-        public long worry;
-        public long counter;
+        public int worry;
 
-        public Item(long worry)
+        public Item(int worry)
         {
             this.worry = worry;
-        }
-
-        public static Item operator +(Item a, long b) => a.AddValue(b);
-        public static Item operator -(Item a, long b) => a.SubtractValue(b);
-        public static Item operator *(Item a, long b) => a.MultiplyValue(b);
-        public static Item operator /(Item a, long b) => a.DivideValue(b);
-
-        public Item AddValue(long val)
-        {
-            worry += val;
-            while (worry > TRILLION)
-            {
-                counter++;
-                worry -= TRILLION;
-            }
-            return this;
-        }
-
-        public Item SubtractValue(long val)
-        {
-            worry -= val;
-            while (worry < 0 && counter > 0)
-            {
-                worry += TRILLION;
-                counter--;
-            }
-            return this;
-        }
-
-        public Item MultiplyValue(long val)
-        {
-            worry *= val;
-            while (worry > TRILLION)
-            {
-                counter++;
-                worry -= TRILLION;
-            }
-            counter *= val;
-            return this;
-        }
-
-        public Item DivideValue(long val)
-        {
-            decimal overflow = ((decimal)counter / val) - (counter / val);
-            decimal tempWorry = overflow * TRILLION + worry;
-            worry = (long)(tempWorry / val);
-            counter /= val;
-            while (worry > TRILLION)
-            {
-                counter++;
-                worry -= TRILLION;
-            }
-            return this;
-        }
-
-        public override string ToString()
-        {
-            return $"{worry}, {counter}";
         }
     }
 
@@ -172,13 +112,13 @@ namespace AdventOfCode2022.Days
             while (items.Count > 0)
             {
                 Item item = items.First();
-                long num = (operationNumber == -1) ? item.worry : (uint)operationNumber;
+                int num = (operationNumber == -1) ? item.worry : operationNumber;
                 if (type == OperationType.Add)
-                    item += num;
+                    item.worry += num;
                 if (type == OperationType.Multiply)
-                    item *= num;
+                    item.worry *= num;
                 if (Day11.doDivideStress)
-                    item /= 3;
+                    item.worry /= 3;
 
                 if ((decimal)item.worry % testNumber == 0)
                 {
