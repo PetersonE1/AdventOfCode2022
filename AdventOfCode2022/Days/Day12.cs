@@ -39,9 +39,59 @@ namespace AdventOfCode2022.Days
             if (startNode == null || exitNode == null)
                 return 0;
 
-            Vector2 currentNode = startNode.pos;
+            Node currentNode = startNode;
 
             openNodes.Add(startNode);
+
+            while (openNodes.Count > 0)
+            {
+                openNodes.Sort();
+                currentNode = openNodes.First();
+                openNodes.Remove(currentNode);
+                closedNodes.Add(currentNode);
+
+                if (currentNode == exitNode)
+                {
+                    int steps = 0;
+                    while (currentNode.parent != null)
+                    {
+                        steps++;
+                        currentNode = currentNode.parent;
+                    }
+                    return steps;
+                }
+
+                currentNode.children.Clear();
+                for (int i = 1; i != 0; i = i == 1 ? -1 : 0)
+                {
+                    Node node1 = nodes.GetElementAt(currentNode.pos + new Vector2(i, 0));
+                    Node node2 = nodes.GetElementAt(currentNode.pos + new Vector2(0, i));
+                    if (node1 != null)
+                    {
+                        currentNode.children.Add(node1);
+                    }
+                    if (node2 != null)
+                    {
+                        currentNode.children.Add(node2);
+                    }
+                }
+
+                foreach (Node child in currentNode.children)
+                {
+                    if (closedNodes.Contains(child))
+                        continue;
+
+                    if (openNodes.Contains(child) && child.g < currentNode.g + 1)
+                        continue;
+
+                    child.parent = currentNode;
+                    child.g = currentNode.g + 1;
+                    child.h = Math.Pow(child.pos.X - exitNode.pos.X, 2) + Math.Pow(child.pos.Y - exitNode.pos.Y, 2);
+
+                    if (!openNodes.Contains(child) && (child.height - currentNode.height) <= 1)
+                        openNodes.Add(child);
+                }
+            }
             return 0;
         }
 
@@ -58,11 +108,20 @@ namespace AdventOfCode2022.Days
 
         private static T GetElementAt<T>(this T[][] values, Vector2 pos)
         {
-            return values[(int)pos.Y][(int)pos.X];
+            if (pos.X < 0 || pos.Y < 0)
+                return default;
+            try
+            {
+                return values[(int)pos.Y][(int)pos.X];
+            }
+            catch
+            {
+                return default;
+            }
         }
     }
 
-    internal class Node
+    internal class Node : IComparable
     {
         public double g = 0;
         public double h = 0;
@@ -71,11 +130,20 @@ namespace AdventOfCode2022.Days
         public Vector2 pos;
 
         public List<Node> children = new List<Node>();
+        public Node parent;
 
         public Node(int height, Vector2 pos)
         {
             this.height = height;
             this.pos = pos;
+        }
+
+        int IComparable.CompareTo(object? obj)
+        {
+            if (obj == null)
+                return 1;
+            Node node = (Node)obj;
+            return (int)((f - node.f / Math.Abs(f - node.f)*2));
         }
     }
 
