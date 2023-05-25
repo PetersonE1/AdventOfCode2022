@@ -118,7 +118,7 @@ namespace AdventOfCode2022.Days
                     child.h = Math.Pow(child.pos.X - exitNode.pos.X, 2) + Math.Pow(child.pos.Y - exitNode.pos.Y, 2);
 
                     if (child.height == currentNode.height)
-                        child.h *= 2;
+                        child.g += 5;
                     if (child.height > currentNode.height)
                         child.h -= 1 / (child.height - currentNode.height);
 
