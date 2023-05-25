@@ -33,6 +33,15 @@ namespace AdventOfCode2022.Days
                 return ns;
             }).ToArray();
 
+            char[,] display = new char[nodes.Length, nodes[0].Length];
+            for (int i = 0; i < display.GetLength(0); i++)
+            {
+                for (int j = 0; j < display.GetLength(1); j++)
+                {
+                    display[i, j] = '.';
+                }
+            }
+
             List<Node> openNodes = new List<Node>();
             List<Node> closedNodes = new List<Node>();
 
@@ -46,18 +55,38 @@ namespace AdventOfCode2022.Days
             while (openNodes.Count > 0)
             {
                 openNodes.Sort();
-                currentNode = openNodes.First();
+                currentNode = openNodes.Last();
                 openNodes.Remove(currentNode);
                 closedNodes.Add(currentNode);
 
                 if (currentNode == exitNode)
                 {
                     int steps = 0;
+                    display[(int)currentNode.pos.Y, (int)currentNode.pos.X] = 'E';
                     while (currentNode.parent != null)
                     {
+                        Vector2 direction = currentNode.pos - currentNode.parent.pos;
+
                         steps++;
                         currentNode = currentNode.parent;
+
+                        char toReplace = 'O';
+                        if (direction.X != 0) toReplace = direction.X < 0 ? '<' : '>';
+                        if (direction.Y != 0) toReplace = direction.Y < 0 ? '^' : 'v';
+                        display[(int)currentNode.pos.Y, (int)currentNode.pos.X] = toReplace;
                     }
+
+                    string displayString = string.Empty;
+                    for (int i = 0; i < display.GetLength(0); i++)
+                    {
+                        for (int j = 0; j < display.GetLength(1); j++)
+                        {
+                            displayString += display[i, j];
+                        }
+                        displayString += '\n';
+                    }
+                    Console.WriteLine(displayString);
+
                     return steps;
                 }
 
