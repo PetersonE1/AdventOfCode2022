@@ -24,6 +24,7 @@ namespace AdventOfCode2022
                 case "9": RunDay9(isFirst); break;
                 case "10": RunDay10(isFirst); break;
                 case "11": RunDay11(isFirst); break;
+                case "12": RunDay12(isFirst); break;
                 default: break;
             }
         }
@@ -116,6 +117,12 @@ namespace AdventOfCode2022
                 Console.WriteLine(Days.Day11.MonkeyBusiness(input, 20, true));
             else
                 Console.WriteLine(Days.Day11.MonkeyBusiness(input, 10000, false));
+        }
+
+        private static void RunDay12(bool firstDay)
+        {
+            string input = Extensions.LoadInput("Day12");
+            Console.WriteLine(Days.Day12.FewestSteps(input));
         }
     }
 }
