@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -10,9 +12,9 @@ namespace AdventOfCode2022.Days
 {
     internal static class Day12
     {
-        public static int FewestSteps(string input)
+        public static int FewestSteps(string input, bool startFromS)
         {
-            Node? startNode = null;
+            List<Node> startNodes = new List<Node>();
             Node? exitNode = null;
 
             int a = 0, b = 0;
@@ -21,10 +23,12 @@ namespace AdventOfCode2022.Days
                 Node[] ns = i.ToCharArray().Select(j =>
                 {
                     Node n = ProcessInput(j, a, b, out NodeType type);
-                    if (type == NodeType.Start)
-                        startNode = n;
+                    if (type == NodeType.Start && startFromS)
+                        startNodes.Add(n);
                     if (type == NodeType.Exit)
                         exitNode = n;
+                    if (!startFromS && n.height == 1)
+                        startNodes.Add(n);
                     a++;
                     return n;
                 }).ToArray();
@@ -45,88 +49,100 @@ namespace AdventOfCode2022.Days
             List<Node> openNodes = new List<Node>();
             List<Node> closedNodes = new List<Node>();
 
-            if (startNode == null || exitNode == null)
+            if (startNodes.Count == 0 || exitNode == null)
                 return 0;
 
-            Node currentNode = startNode;
-
-            openNodes.Add(startNode);
-
-            while (openNodes.Count > 0)
+            Dictionary<int, string> stepsList = new Dictionary<int, string>();
+            foreach (Node startNode in startNodes)
             {
-                openNodes.Sort();
-                currentNode = openNodes.First();
-                openNodes.Remove(currentNode);
-                closedNodes.Add(currentNode);
+                Node currentNode = startNode;
 
-                if (currentNode == exitNode)
+                openNodes.Add(startNode);
+
+                while (openNodes.Count > 0)
                 {
-                    int steps = 0;
-                    display[(int)currentNode.pos.Y, (int)currentNode.pos.X] = 'E';
-                    while (currentNode.parent != null)
+                    openNodes.Sort();
+                    currentNode = openNodes.First();
+                    openNodes.Remove(currentNode);
+                    closedNodes.Add(currentNode);
+
+                    if (currentNode == exitNode)
                     {
-                        Vector2 direction = currentNode.pos - currentNode.parent.pos;
-
-                        steps++;
-                        currentNode = currentNode.parent;
-
-                        char toReplace = 'O';
-                        if (direction.X != 0) toReplace = direction.X < 0 ? '<' : '>';
-                        if (direction.Y != 0) toReplace = direction.Y < 0 ? '^' : 'v';
-                        display[(int)currentNode.pos.Y, (int)currentNode.pos.X] = toReplace;
-                    }
-
-                    string displayString = string.Empty;
-                    for (int i = 0; i < display.GetLength(0); i++)
-                    {
-                        for (int j = 0; j < display.GetLength(1); j++)
+                        int steps = 0;
+                        display[(int)currentNode.pos.Y, (int)currentNode.pos.X] = 'E';
+                        while (currentNode.parent != null)
                         {
-                            displayString += display[i, j];
+                            Vector2 direction = currentNode.pos - currentNode.parent.pos;
+
+                            steps++;
+                            currentNode = currentNode.parent;
+
+                            char toReplace = 'O';
+                            if (direction.X != 0) toReplace = direction.X < 0 ? '<' : '>';
+                            if (direction.Y != 0) toReplace = direction.Y < 0 ? '^' : 'v';
+                            display[(int)currentNode.pos.Y, (int)currentNode.pos.X] = toReplace;
                         }
-                        displayString += '\n';
+
+                        string displayString = string.Empty;
+                        for (int i = 0; i < display.GetLength(0); i++)
+                        {
+                            for (int j = 0; j < display.GetLength(1); j++)
+                            {
+                                displayString += display[i, j];
+                            }
+                            displayString += '\n';
+                        }
+                        //Console.WriteLine(displayString);
+
+                        //return steps;
+                        stepsList.TryAdd(steps, displayString);
+                        break;
                     }
-                    Console.WriteLine(displayString);
 
-                    return steps;
-                }
-
-                currentNode.children.Clear();
-                for (int i = 1; i != 0; i = i == 1 ? -1 : 0)
-                {
-                    Node node1 = nodes.GetElementAt(currentNode.pos + new Vector2(i, 0));
-                    Node node2 = nodes.GetElementAt(currentNode.pos + new Vector2(0, i));
-                    if (node1 != null)
+                    currentNode.children.Clear();
+                    for (int i = 1; i != 0; i = i == 1 ? -1 : 0)
                     {
-                        currentNode.children.Add(node1);
+                        Node node1 = nodes.GetElementAt(currentNode.pos + new Vector2(i, 0));
+                        Node node2 = nodes.GetElementAt(currentNode.pos + new Vector2(0, i));
+                        if (node1 != null)
+                        {
+                            currentNode.children.Add(node1);
+                        }
+                        if (node2 != null)
+                        {
+                            currentNode.children.Add(node2);
+                        }
                     }
-                    if (node2 != null)
+
+                    foreach (Node child in currentNode.children)
                     {
-                        currentNode.children.Add(node2);
+                        if (closedNodes.Contains(child))
+                            continue;
+
+                        if (openNodes.Contains(child) && child.g < currentNode.g + 1)
+                            continue;
+
+                        child.parent = currentNode;
+                        child.g = currentNode.g + 1;
+                        //child.h = Math.Pow(child.pos.X - exitNode.pos.X, 2) + Math.Pow(child.pos.Y - exitNode.pos.Y, 2);
+                        child.h = Math.Abs(child.pos.X - exitNode.pos.X) + Math.Abs(child.pos.Y - exitNode.pos.Y);
+
+                        //if (child.height > currentNode.height)
+                        //    child.h -= 1 / (child.height - currentNode.height);
+
+                        if (!openNodes.Contains(child) && (child.height - currentNode.height) <= 1)
+                            openNodes.Add(child);
                     }
-                }
-
-                foreach (Node child in currentNode.children)
-                {
-                    if (closedNodes.Contains(child))
-                        continue;
-
-                    if (openNodes.Contains(child) && child.g < currentNode.g + 1)
-                        continue;
-
-                    child.parent = currentNode;
-                    child.g = currentNode.g + 1;
-                    child.h = Math.Pow(child.pos.X - exitNode.pos.X, 2) + Math.Pow(child.pos.Y - exitNode.pos.Y, 2);
-
-                    if (child.height == currentNode.height)
-                        child.g += 5;
-                    if (child.height > currentNode.height)
-                        child.h -= 1 / (child.height - currentNode.height);
-
-                    if (!openNodes.Contains(child) && (child.height - currentNode.height) <= 1)
-                        openNodes.Add(child);
                 }
             }
-            return 0;
+            ImmutableSortedDictionary<int, string> results = stepsList.ToImmutableSortedDictionary();
+            Console.WriteLine(results.First().Value);
+            Console.WriteLine("Results:");
+            foreach (var pair in results)
+            {
+                Console.WriteLine(pair.Key);
+            }
+            return results.First().Key;
         }
 
         private static Node ProcessInput(char input, int x, int y, out NodeType nodeType)
