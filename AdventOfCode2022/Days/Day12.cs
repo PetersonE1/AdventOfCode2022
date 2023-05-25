@@ -55,7 +55,7 @@ namespace AdventOfCode2022.Days
             while (openNodes.Count > 0)
             {
                 openNodes.Sort();
-                currentNode = openNodes.Last();
+                currentNode = openNodes.First();
                 openNodes.Remove(currentNode);
                 closedNodes.Add(currentNode);
 
@@ -120,7 +120,7 @@ namespace AdventOfCode2022.Days
                     if (child.height == currentNode.height)
                         child.h *= 2;
                     if (child.height > currentNode.height)
-                        child.h /= 2;
+                        child.h -= 1 / (child.height - currentNode.height);
 
                     if (!openNodes.Contains(child) && (child.height - currentNode.height) <= 1)
                         openNodes.Add(child);
@@ -177,7 +177,7 @@ namespace AdventOfCode2022.Days
             if (obj == null)
                 return 1;
             Node node = (Node)obj;
-            return (int)((f - node.f / Math.Abs(f - node.f)*2));
+            return (int)(f - node.f);
         }
     }
 
