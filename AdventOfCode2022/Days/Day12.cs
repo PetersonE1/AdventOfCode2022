@@ -117,6 +117,11 @@ namespace AdventOfCode2022.Days
                     child.g = currentNode.g + 1;
                     child.h = Math.Pow(child.pos.X - exitNode.pos.X, 2) + Math.Pow(child.pos.Y - exitNode.pos.Y, 2);
 
+                    if (child.height == currentNode.height)
+                        child.h *= 2;
+                    if (child.height > currentNode.height)
+                        child.h /= 2;
+
                     if (!openNodes.Contains(child) && (child.height - currentNode.height) <= 1)
                         openNodes.Add(child);
                 }
