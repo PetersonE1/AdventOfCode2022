@@ -16,9 +16,9 @@ namespace AdventOfCode2022.Days
         {
             List<Node> startNodes = new List<Node>();
             Node? exitNode = null;
-
+            
             int a = 0, b = 0;
-            Node[][] nodes = input.Split('\n').Select(i => 
+            Node[][] nodes = input.Split("\r\n").Select(i => 
             {
                 Node[] ns = i.ToCharArray().Select(j =>
                 {
@@ -37,15 +37,6 @@ namespace AdventOfCode2022.Days
                 return ns;
             }).ToArray();
 
-            char[,] display = new char[nodes.Length, nodes[0].Length];
-            for (int i = 0; i < display.GetLength(0); i++)
-            {
-                for (int j = 0; j < display.GetLength(1); j++)
-                {
-                    display[i, j] = '.';
-                }
-            }
-
             List<Node> openNodes = new List<Node>();
             List<Node> closedNodes = new List<Node>();
 
@@ -55,6 +46,21 @@ namespace AdventOfCode2022.Days
             Dictionary<int, string> stepsList = new Dictionary<int, string>();
             foreach (Node startNode in startNodes)
             {
+                char[,] display = new char[nodes.Length, nodes[0].Length];
+                for (int i = 0; i < display.GetLength(0); i++)
+                {
+                    for (int j = 0; j < display.GetLength(1); j++)
+                    {
+                        display[i, j] = '.';
+                    }
+                }
+
+                openNodes.Clear();
+                closedNodes.Clear();
+                foreach (Node[] n in nodes)
+                    foreach (Node node in n)
+                        node.Reset();
+
                 Node currentNode = startNode;
 
                 openNodes.Add(startNode);
@@ -92,9 +98,7 @@ namespace AdventOfCode2022.Days
                             }
                             displayString += '\n';
                         }
-                        //Console.WriteLine(displayString);
 
-                        //return steps;
                         stepsList.TryAdd(steps, displayString);
                         break;
                     }
@@ -116,7 +120,7 @@ namespace AdventOfCode2022.Days
 
                     foreach (Node child in currentNode.children)
                     {
-                        if (closedNodes.Contains(child))
+                        if (closedNodes.Contains(child) || (child.height - currentNode.height) > 1)
                             continue;
 
                         if (openNodes.Contains(child) && child.g < currentNode.g + 1)
@@ -124,13 +128,9 @@ namespace AdventOfCode2022.Days
 
                         child.parent = currentNode;
                         child.g = currentNode.g + 1;
-                        //child.h = Math.Pow(child.pos.X - exitNode.pos.X, 2) + Math.Pow(child.pos.Y - exitNode.pos.Y, 2);
                         child.h = Math.Abs(child.pos.X - exitNode.pos.X) + Math.Abs(child.pos.Y - exitNode.pos.Y);
 
-                        //if (child.height > currentNode.height)
-                        //    child.h -= 1 / (child.height - currentNode.height);
-
-                        if (!openNodes.Contains(child) && (child.height - currentNode.height) <= 1)
+                        if (!openNodes.Contains(child))
                             openNodes.Add(child);
                     }
                 }
@@ -142,6 +142,7 @@ namespace AdventOfCode2022.Days
             {
                 Console.WriteLine(pair.Key);
             }
+            Console.WriteLine("-------");
             return results.First().Key;
         }
 
@@ -150,9 +151,9 @@ namespace AdventOfCode2022.Days
             Vector2 pos = new Vector2(x, y);
             switch (input)
             {
-                case 'S': nodeType = NodeType.Start; return new Node(1, pos);
-                case 'E': nodeType = NodeType.Exit; return new Node(26, pos);
-                default: nodeType = NodeType.None; return new Node((int)input - 96, pos);
+                case 'S': nodeType = NodeType.Start; return new Node(1, pos, input);
+                case 'E': nodeType = NodeType.Exit; return new Node(26, pos, input);
+                default: nodeType = NodeType.None; return new Node((int)input - 96, pos, input);
             }
         }
 
@@ -178,14 +179,24 @@ namespace AdventOfCode2022.Days
         public double f => g + h;
         public int height = 0;
         public Vector2 pos;
+        public char character;
 
         public List<Node> children = new List<Node>();
-        public Node parent;
+        public Node? parent;
 
-        public Node(int height, Vector2 pos)
+        public Node(int height, Vector2 pos, char character)
         {
             this.height = height;
             this.pos = pos;
+            this.character = character;
+        }
+
+        public void Reset()
+        {
+            g = 0;
+            h = 0;
+            children.Clear();
+            parent = null;
         }
 
         int IComparable.CompareTo(object? obj)

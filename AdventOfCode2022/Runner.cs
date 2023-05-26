@@ -121,7 +121,7 @@ namespace AdventOfCode2022
 
         private static void RunDay12(bool firstDay)
         {
-            string input = Extensions.LoadInput("Day12T");
+            string input = Extensions.LoadInput("Day12");
             Console.WriteLine(Days.Day12.FewestSteps(input, firstDay));
         }
     }
