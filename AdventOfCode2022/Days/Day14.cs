@@ -12,14 +12,61 @@ namespace AdventOfCode2022.Days
 {
     internal static class Day14
     {
-        public static int RestingSand(string input)
+        public static int RestingSand(string input, bool abyss)
         {
             Dictionary<Vector2Int, bool> map = GenerateMap(input);
+            int sand = 0;
+            int height = map.MaxBy(v => v.Key.y).Key.y;
 
-            // TODO - SAND
+            bool finished = false;
+            while (!finished)
+            {
+                bool done = false;
+                Vector2Int currentPos = new Vector2Int(500, 0);
+                while (!done)
+                {
+                    if (abyss && currentPos.y > height)
+                    {
+                        finished = true;
+                        break;
+                    }
+                    if (!abyss && currentPos.y == height + 1)
+                    {
+                        map.Add(currentPos, true);
+                        sand++;
+                        break;
+                    }
+                    if (!map.ContainsKey(currentPos + new Vector2Int(0, 1)))
+                    {
+                        currentPos.y++;
+                        continue;
+                    }
+                    if (!map.ContainsKey(currentPos + new Vector2Int(-1, 1)))
+                    {
+                        currentPos.y++;
+                        currentPos.x--;
+                        continue;
+                    }
+                    if (!map.ContainsKey(currentPos + new Vector2Int(1, 1)))
+                    {
+                        currentPos.y++;
+                        currentPos.x++;
+                        continue;
+                    }
+                    if (currentPos == new Vector2Int(500, 0))
+                    {
+                        sand++;
+                        finished = true;
+                        break;
+                    }
+                    map.Add(currentPos, true);
+                    sand++;
+                    done = true;
+                }
+            }
 
             DisplayMap(map);
-            return 0;
+            return sand;
         }
 
         private static Dictionary<Vector2Int, bool> GenerateMap(string input)

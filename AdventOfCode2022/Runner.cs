@@ -139,7 +139,7 @@ namespace AdventOfCode2022
         private static void RunDay14(bool firstDay)
         {
             string input = Extensions.LoadInput("Day14");
-            Console.WriteLine(Days.Day14.RestingSand(input));
+            Console.WriteLine(Days.Day14.RestingSand(input, firstDay));
         }
     }
 }
