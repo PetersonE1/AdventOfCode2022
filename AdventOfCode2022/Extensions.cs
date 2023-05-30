@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -109,6 +110,87 @@ namespace AdventOfCode2022
         {
             string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\{fileName}.txt";
             return File.ReadAllText(file);
+        }
+    }
+
+    public struct Vector2Int : IComparable
+    {
+        public int x;
+        public int y;
+
+        public Vector2Int(int x, int y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
+        // Operator Overloads
+        public static Vector2Int operator +(Vector2Int a) => a;
+        public static Vector2Int operator -(Vector2Int a) => new Vector2Int(-a.x, -a.y);
+
+        public static Vector2Int operator +(Vector2Int a, Vector2Int b) => new Vector2Int(a.x + b.x, a.y + b.y);
+        public static Vector2Int operator -(Vector2Int a, Vector2Int b) => new Vector2Int(a.x - b.x, a.y - b.y);
+        public static Vector2Int operator *(Vector2Int a, Vector2Int b) => new Vector2Int(a.x * b.x, a.y * b.y);
+        public static Vector2Int operator /(Vector2Int a, Vector2Int b) => new Vector2Int(a.x / b.x, a.y / b.y);
+
+        public static Vector2Int operator +(Vector2Int a, double b) => new Vector2Int((int)(a.x + b), (int)(a.y + b));
+        public static Vector2Int operator -(Vector2Int a, double b) => new Vector2Int((int)(a.x - b), (int)(a.y - b));
+        public static Vector2Int operator *(Vector2Int a, double b) => new Vector2Int((int)(a.x * b), (int)(a.y * b));
+        public static Vector2Int operator /(Vector2Int a, double b) => new Vector2Int((int)(a.x / b), (int)(a.y / b));
+
+        public static Vector2Int operator +(Vector2Int a, float b) => new Vector2Int((int)(a.x + b), (int)(a.y + b));
+        public static Vector2Int operator -(Vector2Int a, float b) => new Vector2Int((int)(a.x - b), (int)(a.y - b));
+        public static Vector2Int operator *(Vector2Int a, float b) => new Vector2Int((int)(a.x * b), (int)(a.y * b));
+        public static Vector2Int operator /(Vector2Int a, float b) => new Vector2Int((int)(a.x / b), (int)(a.y / b));
+
+        public static Vector2Int operator +(Vector2Int a, int b) => new Vector2Int(a.x + b, a.y + b);
+        public static Vector2Int operator -(Vector2Int a, int b) => new Vector2Int(a.x - b, a.y - b);
+        public static Vector2Int operator *(Vector2Int a, int b) => new Vector2Int(a.x * b, a.y * b);
+        public static Vector2Int operator /(Vector2Int a, int b) => new Vector2Int(a.x / b, a.y / b);
+
+        public static bool operator ==(Vector2Int a, Vector2Int b) => Vector2Int.Equals(a, b);
+        public static bool operator !=(Vector2Int a, Vector2Int b) => !Vector2Int.Equals(a, b);
+
+        public override bool Equals([NotNullWhen(true)] object? obj)
+        {
+            if (!(obj is Vector2Int))
+            {
+                return false;
+            }
+            Vector2Int v = (Vector2Int)obj;
+            return x == v.x && y == v.y;
+        }
+
+        public override int GetHashCode()
+        {
+            return ShiftAndWrap(x.GetHashCode(), 2) ^ y.GetHashCode();
+        }
+
+        private int ShiftAndWrap(int value, int positions)
+        {
+            positions = positions & 0x1F;
+
+            // Save the existing bit pattern, but interpret it as an unsigned integer.
+            uint number = BitConverter.ToUInt32(BitConverter.GetBytes(value), 0);
+            // Preserve the bits to be discarded.
+            uint wrapped = number >> (32 - positions);
+            // Shift and wrap the discarded bits.
+            return BitConverter.ToInt32(BitConverter.GetBytes((number << positions) | wrapped), 0);
+        }
+
+        public override string ToString()
+        {
+            return $@"{x}, {y}";
+        }
+
+        public int CompareTo(object? obj)
+        {
+            if (!(obj is Vector2Int))
+                return 0;
+            Vector2Int v = (Vector2Int)obj;
+            if (x != v.x)
+                return v.x - x;
+            return v.y - y;
         }
     }
 }

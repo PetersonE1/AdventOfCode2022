@@ -26,6 +26,7 @@ namespace AdventOfCode2022
                 case "11": RunDay11(isFirst); break;
                 case "12": RunDay12(isFirst); break;
                 case "13": RunDay13(isFirst); break;
+                case "14": RunDay14(isFirst); break;
                 default: break;
             }
         }
