@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,8 @@ namespace AdventOfCode2022.Days
     {
         public static int RestingSand(string input)
         {
+            List<Vector2Int> map = GenerateMap(input);
+            DisplayMap(map);
             return 0;
         }
 
@@ -22,26 +25,25 @@ namespace AdventOfCode2022.Days
             foreach (string line in lines)
             {
                 Vector2Int[] parts = line.Split(" -> ").Select(v => { int[] xy = v.Split(',').Select(n => Convert.ToInt32(n)).ToArray(); return new Vector2Int(xy[0], xy[1]); }).ToArray();
-                int index = 0;
 
                 map.Add(parts[0]);
-                while (index < parts.Length - 1 && parts[index] != parts[index + 1])
-                {
-                    Vector2Int first = parts[index];
-                    Vector2Int second = parts[index + 1];
-                    if (first.x != second.x)
+                for (int index = 0; index < parts.Length - 1; index++)
+                { 
+                    while (parts[index] != parts[index + 1])
                     {
-                        first.x += Math.Clamp(second.x - first.x, -1, 1);
-                        map.Add(first);
-                        continue;
+                        if (parts[index].x != parts[index + 1].x)
+                        {
+                            parts[index].x += Math.Clamp(parts[index + 1].x - parts[index].x, -1, 1);
+                            map.Add(parts[index]);
+                            continue;
+                        }
+                        if (parts[index].y != parts[index + 1].y)
+                        {
+                            parts[index].y += Math.Clamp(parts[index + 1].y - parts[index].y, -1, 1);
+                            map.Add(parts[index]);
+                            continue;
+                        }
                     }
-                    if (first.y != second.y)
-                    {
-                        first.y += Math.Clamp(second.y - first.y, -1, 1);
-                        map.Add(first);
-                        continue;
-                    }
-                    index++;
                 }
             }
             return map;
@@ -50,7 +52,12 @@ namespace AdventOfCode2022.Days
         private static void DisplayMap(List<Vector2Int> map)
         {
             map.Sort();
+            int width = (map.Last().x - map.First().x) + 1;
+            int height = map.MaxBy(v => v.y).y + 1;
 
+            Console.WriteLine(map.First());
+            Console.WriteLine(map.Last());
+            Console.WriteLine($"{width}, {height}");
         }
     }
 }

@@ -180,7 +180,7 @@ namespace AdventOfCode2022
 
         public override string ToString()
         {
-            return $@"{x}, {y}";
+            return $@"[{x}, {y}]";
         }
 
         public int CompareTo(object? obj)
@@ -189,8 +189,8 @@ namespace AdventOfCode2022
                 return 0;
             Vector2Int v = (Vector2Int)obj;
             if (x != v.x)
-                return v.x - x;
-            return v.y - y;
+                return x - v.x;
+            return y - v.y;
         }
     }
 }
