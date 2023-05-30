@@ -19,32 +19,34 @@ namespace AdventOfCode2022.Days
                 List<object> first = ConstructList(ref split[0], 0);
                 List<object> second = ConstructList(ref split[1], 0);
 
-                bool result = CompareValues(first, second);
-                if (result)
+                int result = CompareValues(first, second);
+                if (result == 1)
                     final += i + 1;
 
-                DisplayResults(first);
+                /*DisplayResults(first);
                 Console.WriteLine("-----");
                 DisplayResults(second);
-                Console.WriteLine(result);
+                Console.WriteLine(result);*/
             }
             return final;
         }
 
-        public static bool CompareValues(object first, object second)
+        public static int CompareValues(object first, object second)
         {
             if (first is int && second is int)
             {
-                return (int)first < (int)second;
+                if ((int)first == (int)second)
+                    return 2;
+                return (int)first < (int)second ? 1 : 0;
             }
             if (first is int && second is List<object>)
             {
-                Console.WriteLine($"Converting {first} to list");
+                //Console.WriteLine($"Converting {first} to list");
                 return CompareValues(new List<object>() { first }, second);
             }
             if (first is List<object> && second is int)
             {
-                Console.WriteLine($"Converting {second} to list");
+                //Console.WriteLine($"Converting {second} to list");
                 return CompareValues(first, new List<object>() { second });
             }
             if (first is List<object> && second is List<object>)
@@ -55,15 +57,17 @@ namespace AdventOfCode2022.Days
                 int length = f.Count < s.Count ? f.Count : s.Count;
                 for (int j = 0; j < length; j++)
                 {
-                    Console.WriteLine($"{f[j]}, {s[j]}");
-                    if (f[j] is int && s[j] is int && (int)f[j] == (int)s[j])
-                        continue;
-                    return CompareValues(f[j], s[j]);
+                    //Console.WriteLine($"{f[j]}, {s[j]}");
+                    int result = CompareValues(f[j], s[j]);
+                    if (result != 2)
+                        return result;
                 }
-                return f.Count < s.Count;
+                if (f.Count == s.Count)
+                    return 2;
+                return f.Count < s.Count ? 1 : 0;
             }
             Console.WriteLine("Unknown data type in comparison");
-            return false;
+            return 0;
         }
 
         public static List<object> ConstructList(ref string input, int startIndex)
