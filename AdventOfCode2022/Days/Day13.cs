@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,26 @@ namespace AdventOfCode2022.Days
                 Console.WriteLine("-----");
                 DisplayResults(second);
                 Console.WriteLine(result);*/
+            }
+            return final;
+        }
+
+        public static int SortPackets(string input)
+        {
+            input = input.Replace("\r\n\r\n", "\r\n");
+            input += "\r\n[[2]]\r\n[[6]]";
+            Dictionary<List<object>, string> lines = input.Split("\r\n").ToDictionary(n => ConstructList(ref n, 0));
+            int final = 0;
+
+            ImmutableSortedDictionary<List<object>, string> sortedLines = lines.ToImmutableSortedDictionary(new Day13Sort());
+            for (int i = 0; i < sortedLines.Count; i++)
+            {
+                string s = sortedLines.ElementAt(i).Value;
+                if (s == "[[2]]")
+                    final = i + 1;
+                if (s == "[[6]]")
+                    final *= i + 1;
+                //Console.WriteLine(s);
             }
             return final;
         }
@@ -135,6 +156,23 @@ namespace AdventOfCode2022.Days
                     Console.WriteLine("]");
                 }
             }
+        }
+    }
+
+    internal class Day13Sort : IComparer<List<object>>
+    {
+        public int Compare(List<object> a, List<object> b)
+        {
+            if (a == null || b == null)
+                return -1;
+            int result = Day13.CompareValues(a, b);
+            if (result == 1)
+                return -1;
+            if (result == 0)
+            {
+                return 1;
+            }
+            return 1;
         }
     }
 }

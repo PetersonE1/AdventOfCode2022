@@ -128,8 +128,11 @@ namespace AdventOfCode2022
 
         private static void RunDay13(bool firstDay)
         {
-            string input = Extensions.LoadInput("Day13T");
-            Console.WriteLine(Days.Day13.PacketOrder(input));
+            string input = Extensions.LoadInput("Day13");
+            if (firstDay)
+                Console.WriteLine(Days.Day13.PacketOrder(input));
+            else
+                Console.WriteLine(Days.Day13.SortPackets(input));
         }
     }
 }
