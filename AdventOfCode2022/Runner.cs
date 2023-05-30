@@ -25,6 +25,7 @@ namespace AdventOfCode2022
                 case "10": RunDay10(isFirst); break;
                 case "11": RunDay11(isFirst); break;
                 case "12": RunDay12(isFirst); break;
+                case "13": RunDay13(isFirst); break;
                 default: break;
             }
         }
@@ -123,6 +124,12 @@ namespace AdventOfCode2022
         {
             string input = Extensions.LoadInput("Day12");
             Console.WriteLine(Days.Day12.FewestSteps(input, firstDay));
+        }
+
+        private static void RunDay13(bool firstDay)
+        {
+            string input = Extensions.LoadInput("Day13T");
+            Console.WriteLine(Days.Day13.PacketOrder(input));
         }
     }
 }
