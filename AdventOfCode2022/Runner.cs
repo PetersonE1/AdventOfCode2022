@@ -134,5 +134,11 @@ namespace AdventOfCode2022
             else
                 Console.WriteLine(Days.Day13.SortPackets(input));
         }
+        
+        private static void RunDay14(bool firstDay)
+        {
+            string input = Extensions.LoadInput("Day14T");
+            Console.WriteLine(Days.Day14.RestingSand(input));
+        }
     }
 }
