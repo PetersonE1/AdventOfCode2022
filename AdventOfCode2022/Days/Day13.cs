@@ -11,17 +11,59 @@ namespace AdventOfCode2022.Days
         public static int PacketOrder(string input)
         {
             string[] pairs = input.Split("\r\n\r\n");
+            int final = 0;
 
             for (int i = 0; i < pairs.Length; i++)
             {
                 string[] split = pairs[i].Split("\r\n");
                 List<object> first = ConstructList(ref split[0], 0);
                 List<object> second = ConstructList(ref split[1], 0);
-            }
 
-            Console.WriteLine("\nRESULTS");
-            DisplayResults(list);
-            return 0;
+                bool result = CompareValues(first, second);
+                if (result)
+                    final += i + 1;
+
+                DisplayResults(first);
+                Console.WriteLine("-----");
+                DisplayResults(second);
+                Console.WriteLine(result);
+            }
+            return final;
+        }
+
+        public static bool CompareValues(object first, object second)
+        {
+            if (first is int && second is int)
+            {
+                return (int)first < (int)second;
+            }
+            if (first is int && second is List<object>)
+            {
+                Console.WriteLine($"Converting {first} to list");
+                return CompareValues(new List<object>() { first }, second);
+            }
+            if (first is List<object> && second is int)
+            {
+                Console.WriteLine($"Converting {second} to list");
+                return CompareValues(first, new List<object>() { second });
+            }
+            if (first is List<object> && second is List<object>)
+            {
+                List<object> f = (List<object>)first;
+                List<object> s = (List<object>)second;
+                
+                int length = f.Count < s.Count ? f.Count : s.Count;
+                for (int j = 0; j < length; j++)
+                {
+                    Console.WriteLine($"{f[j]}, {s[j]}");
+                    if (f[j] is int && s[j] is int && (int)f[j] == (int)s[j])
+                        continue;
+                    return CompareValues(f[j], s[j]);
+                }
+                return f.Count < s.Count;
+            }
+            Console.WriteLine("Unknown data type in comparison");
+            return false;
         }
 
         public static List<object> ConstructList(ref string input, int startIndex)
@@ -65,8 +107,6 @@ namespace AdventOfCode2022.Days
                     }
                     int length = i - startIndex;
                     input = input.Remove(startIndex, length);
-                    Console.WriteLine($"final result: {list.Count}");
-                    Console.WriteLine(input);
                     return list;
                 }
 
