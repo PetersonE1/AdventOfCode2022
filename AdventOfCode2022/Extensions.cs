@@ -196,5 +196,19 @@ namespace AdventOfCode2022
                 return x - v.x;
             return y - v.y;
         }
+
+        public double Distance(Vector2Int v) 
+        {
+            int xdiff = Math.Abs(v.x - x);
+            int ydiff = Math.Abs(v.y - y);
+            return Math.Sqrt((xdiff * xdiff) + (ydiff * ydiff));
+        }
+
+        public int Manhattan(Vector2Int v)
+        {
+            int xdiff = Math.Abs(v.x - x);
+            int ydiff = Math.Abs(v.y - y);
+            return xdiff + ydiff;
+        }
     }
 }
