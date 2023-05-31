@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,32 +21,40 @@ namespace AdventOfCode2022.Days
                 sensors.Add(key, value);
             }
 
-            List<Vector2Int> beacons = sensors.Values.ToList();
-            beacons.Sort();
-            int minX = beacons.First().x;
-            int maxX = beacons.Last().x;
+            int minX = int.MaxValue;
+            int maxX = int.MinValue;
+            foreach (var pair in sensors)
+            {
+                int dist = pair.Key.Manhattan(pair.Value);
+                if (pair.Key.x - dist < minX)
+                    minX = pair.Key.x - dist;
+                if (pair.Key.x + dist > maxX)
+                    maxX = pair.Key.x + dist;
+            }
 
+            int blockedCells = 0;
+            for (int i = minX; i <= maxX; i++)
+            {
+                if (IsBlocked(new Vector2Int(i, line_to_check), sensors))
+                    blockedCells++;
+            }
 
-
-            return 0;
+            return blockedCells;
         }
 
         private static bool IsBlocked(Vector2Int cell, Dictionary<Vector2Int, Vector2Int> sensors)
         {
-            int distance = int.MaxValue;
-            Vector2Int currentSensor = new Vector2Int();
+            if (sensors.Values.Contains(cell))
+                return false;
 
-            foreach (Vector2Int sensor in sensors.Keys)
+            foreach (var pair in sensors)
             {
-                int tempDist = cell.Manhattan(sensor);
-                if (tempDist < distance)
-                {
-                    distance = tempDist;
-                    currentSensor = sensor;
-                }
+                int distance = cell.Manhattan(pair.Key);
+                if (distance <= pair.Key.Manhattan(pair.Value))
+                    return true;
             }
 
-            return distance <= currentSensor.Manhattan(sensors[currentSensor]);
+            return false;
         }
     }
 }
