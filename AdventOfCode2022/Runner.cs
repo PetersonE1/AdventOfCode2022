@@ -30,6 +30,7 @@ namespace AdventOfCode2022
                 case "12": RunDay12(isFirst, test); break;
                 case "13": RunDay13(isFirst, test); break;
                 case "14": RunDay14(isFirst, test); break;
+                case "15": RunDay15(isFirst, test); break;
                 default: break;
             }
         }
@@ -143,6 +144,13 @@ namespace AdventOfCode2022
         {
             string input = Extensions.LoadInput("Day14", runTest);
             Console.WriteLine(Days.Day14.RestingSand(input, firstDay));
+        }
+
+        private static void RunDay15(bool firstDay, bool runTest = false)
+        {
+            string input = Extensions.LoadInput("Day15", runTest);
+            int line = runTest ? 10 : 2000000;
+            Console.WriteLine(input, line);
         }
     }
 }
