@@ -106,9 +106,13 @@ namespace AdventOfCode2022
             return s;
         }
 
-        public static string LoadInput(string fileName)
+        public static string LoadInput(string fileName, bool testFile)
         {
-            string file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\{fileName}.txt";
+            string file;
+            if (!testFile)
+                file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\{fileName}.txt";
+            else
+                file = $@"{Directory.GetCurrentDirectory()}\..\..\..\Inputs\TestData\{fileName}T.txt";
             return File.ReadAllText(file);
         }
     }
