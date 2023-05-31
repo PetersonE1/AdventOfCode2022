@@ -150,7 +150,11 @@ namespace AdventOfCode2022
         {
             string input = Extensions.LoadInput("Day15", runTest);
             int line = runTest ? 10 : 2000000;
-            Console.WriteLine(Days.Day15.BeaconMissing(input, line));
+            int area = runTest ? 20 : 4000000;
+            if (firstDay)
+                Console.WriteLine(Days.Day15.BeaconMissing(input, line));
+            else
+                Console.WriteLine(Days.Day15.FindBeacon(input, area));
         }
     }
 }
