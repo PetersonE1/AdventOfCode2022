@@ -10,6 +10,11 @@ namespace AdventOfCode2022.Days
 {
     internal static class Day15
     {
+        // Adjust to work in ranges
+        // width at sensor = manhattan distance
+        // width -= 2 each y away
+        // at each y, check multiple ranges for continuity
+        // if continuity is broken, second range minimum - 1 = beacon
         public static int BeaconMissing(string input, int line_to_check)
         {
             string[] lines = input.Split("\r\n");
