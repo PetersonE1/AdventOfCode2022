@@ -31,6 +31,7 @@ namespace AdventOfCode2022
                 case "13": RunDay13(isFirst, test); break;
                 case "14": RunDay14(isFirst, test); break;
                 case "15": RunDay15(isFirst, test); break;
+                case "16": RunDay16(isFirst, test); break;
                 default: break;
             }
         }
@@ -155,6 +156,12 @@ namespace AdventOfCode2022
                 Console.WriteLine(Days.Day15.BeaconMissing(input, line));
             else
                 Console.WriteLine(Days.Day15.FindBeacon(input, area));
+        }
+
+        private static void RunDay16(bool firstDay, bool runTest = false)
+        {
+            string input = Extensions.LoadInput("Day16", runTest);
+            Console.WriteLine(Days.Day16.PressureRelease(input));
         }
     }
 }
