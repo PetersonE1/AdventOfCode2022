@@ -93,7 +93,7 @@ namespace AdventOfCode2022.Days
         public int flow_rate;
         public string[] valves;
         public bool open = false;
-        public long score = 0;
+        public long score = long.MinValue;
         public Valve parent;
 
         public Valve(string id, int flow_rate, string[] valves)
@@ -120,7 +120,7 @@ namespace AdventOfCode2022.Days
 
         public void ClearScore()
         {
-            score = 0;
+            score = long.MinValue;
         }
 
         public int CompareTo(Valve? other)
