@@ -8,10 +8,27 @@ namespace AdventOfCode2022.Days
 {
     internal static class Day16
     {
-        public static int PressureRelease(string input)
+        public static long PressureRelease(string input)
         {
             Dictionary<string, Valve> valves = ParseInput(input).ToDictionary(k => k.id);
-            return 0;
+            long pressure = 0;
+            int flow = 0;
+
+            Valve current_valve = valves["AA"];
+            for (int i = 0; i < 30; i++)
+            {
+                pressure += flow;
+                if (i == 0)
+                    current_valve = valves[current_valve.valves.Last()];
+                if (i == 1)
+                    flow += current_valve.flow_rate;
+                if (i == 2)
+                    current_valve = valves[current_valve.valves.First()];
+                if (i == 3)
+                    flow += current_valve.flow_rate;
+            }
+
+            return pressure;
         }
 
         public static Valve[] ParseInput(string input)
@@ -38,6 +55,7 @@ namespace AdventOfCode2022.Days
                 }
 
                 Valve v = new Valve(valve, flow, outs.ToArray());
+                valves.Add(v);
             }
             return valves.ToArray();
         }
