@@ -23,9 +23,17 @@ namespace AdventOfCode2022.Days
                 List<Valve> toVisit = new List<Valve>();
                 foreach (string s in current_valve.valves)
                     toVisit.Add(valves[s]);
-                toVisit.Sort();
+                toVisit.Sort(new SortValveByPaths());
+                Console.WriteLine(current_valve.id);
 
-                if (!current_valve.open && current_valve.flow_rate > toVisit.First().flow_rate)
+                List<Valve> toVisitFiltered = toVisit.Where(n => !n.open).ToList();
+                if (!current_valve.open && (toVisitFiltered != null && toVisitFiltered.Count > 0 && current_valve.flow_rate > toVisitFiltered.Max().flow_rate))
+                {
+                    current_valve.open = true;
+                    flow += current_valve.flow_rate;
+                    continue;
+                }
+                if (!current_valve.open && (toVisitFiltered == null || toVisitFiltered.Count == 0))
                 {
                     current_valve.open = true;
                     flow += current_valve.flow_rate;
@@ -43,7 +51,18 @@ namespace AdventOfCode2022.Days
                 }
                 if (toContinue)
                     continue;
-                current_valve = valves[current_valve.valves.First()];
+
+                IEnumerable<Valve> closedValves = valves.Values.Where(v => !v.open && v.flow_rate > 0);
+                if (closedValves.Count() == 1)
+                {
+                    if (current_valve.valves.Contains(closedValves.First().id))
+                    {
+                        current_valve = closedValves.First();
+                        continue;
+                    }
+                }
+
+                current_valve = toVisit.First();
             }
 
             return pressure;
@@ -99,6 +118,14 @@ namespace AdventOfCode2022.Days
             if (other == null)
                 return 1;
             return flow_rate - other.flow_rate;
+        }
+    }
+
+    internal class SortValveByPaths : IComparer<Valve>
+    {
+        public int Compare(Valve? x, Valve? y)
+        {
+            return y.valves.Length - x.valves.Length;
         }
     }
 }
