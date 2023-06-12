@@ -18,14 +18,32 @@ namespace AdventOfCode2022.Days
             for (int i = 0; i < 30; i++)
             {
                 pressure += flow;
-                if (i == 0)
-                    current_valve = valves[current_valve.valves.Last()];
-                if (i == 1)
+
+                current_valve.visited = true;
+                List<Valve> toVisit = new List<Valve>();
+                foreach (string s in current_valve.valves)
+                    toVisit.Add(valves[s]);
+                toVisit.Sort();
+
+                if (!current_valve.open && current_valve.flow_rate > toVisit.First().flow_rate)
+                {
+                    current_valve.open = true;
                     flow += current_valve.flow_rate;
-                if (i == 2)
-                    current_valve = valves[current_valve.valves.First()];
-                if (i == 3)
-                    flow += current_valve.flow_rate;
+                    continue;
+                }
+                bool toContinue = false;
+                foreach (Valve v in toVisit)
+                {
+                    if (!v.visited)
+                    {
+                        current_valve = v;
+                        toContinue = true;
+                        break;
+                    }
+                }
+                if (toContinue)
+                    continue;
+                current_valve = valves[current_valve.valves.First()];
             }
 
             return pressure;
@@ -61,17 +79,26 @@ namespace AdventOfCode2022.Days
         }
     }
 
-    internal class Valve
+    internal class Valve : IComparable<Valve>
     {
         public string id;
         public int flow_rate;
         public string[] valves;
+        public bool open = false;
+        public bool visited = false;
 
         public Valve(string id, int flow_rate, string[] valves)
         {
             this.id = id;
             this.flow_rate = flow_rate;
             this.valves = valves;
+        }
+
+        public int CompareTo(Valve? other)
+        {
+            if (other == null)
+                return 1;
+            return flow_rate - other.flow_rate;
         }
     }
 }
