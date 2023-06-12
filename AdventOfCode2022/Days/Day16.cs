@@ -15,23 +15,43 @@ namespace AdventOfCode2022.Days
             int flow = 0;
 
             Valve current_valve = valves["AA"];
-            for (int i = 0; i < /*30*/1; i++)
+            for (int i = 0; i < 30; i++)
             {
                 pressure += flow;
 
-                Console.WriteLine(current_valve.id);
+                foreach (Valve v in valves.Values)
+                    v.ClearScore();
+
+                Console.WriteLine($"Current Valve: {current_valve.id}");
 
                 current_valve.CalculateScore(valves, 0, current_valve);
                 Valve goal = valves.Values.Max();
+
+                Console.WriteLine($"Target Valve: {goal.id} [score={goal.score}]");
+
                 if (goal == current_valve)
                 {
-                    goal.open = true;
-                    flow += goal.flow_rate;
+                    Console.WriteLine(0);
+                    current_valve.open = true;
+                    flow += current_valve.flow_rate;
+                    Console.WriteLine($"Opening {current_valve.id}");
+                    Console.WriteLine("----------------------------------------");
                     continue;
                 }
-                while (goal.parent != current_valve)
+                int a = 0;
+                while (goal.parent != current_valve && a < 10)
+                {
                     goal = goal.parent;
+                    a++;
+                }
+                if (a >= 10)
+                {
+                    Console.WriteLine($"Broken, Goal Parent: {goal.parent.id}");
+                    return 0;
+                }
                 current_valve = goal;
+                Console.WriteLine($"Moving to {current_valve.id}");
+                Console.WriteLine("----------------------------------------");
             }
 
             return pressure;
@@ -96,6 +116,11 @@ namespace AdventOfCode2022.Days
             }
             if (open)
                 this.score = 0;
+        }
+
+        public void ClearScore()
+        {
+            score = 0;
         }
 
         public int CompareTo(Valve? other)
