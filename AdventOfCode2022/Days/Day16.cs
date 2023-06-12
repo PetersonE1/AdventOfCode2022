@@ -10,7 +10,7 @@ namespace AdventOfCode2022.Days
     {
         public static int PressureRelease(string input)
         {
-            Valve[] valves = ParseInput(input);
+            Dictionary<string, Valve> valves = ParseInput(input).ToDictionary(k => k.id);
             return 0;
         }
 
