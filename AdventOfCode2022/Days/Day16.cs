@@ -15,54 +15,23 @@ namespace AdventOfCode2022.Days
             int flow = 0;
 
             Valve current_valve = valves["AA"];
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < /*30*/1; i++)
             {
                 pressure += flow;
 
-                current_valve.visited = true;
-                List<Valve> toVisit = new List<Valve>();
-                foreach (string s in current_valve.valves)
-                    toVisit.Add(valves[s]);
-                toVisit.Sort(new SortValveByPaths());
                 Console.WriteLine(current_valve.id);
 
-                List<Valve> toVisitFiltered = toVisit.Where(n => !n.open).ToList();
-                if (!current_valve.open && (toVisitFiltered != null && toVisitFiltered.Count > 0 && current_valve.flow_rate > toVisitFiltered.Max().flow_rate))
+                current_valve.CalculateScore(valves, 0, current_valve);
+                Valve goal = valves.Values.Max();
+                if (goal == current_valve)
                 {
-                    current_valve.open = true;
-                    flow += current_valve.flow_rate;
+                    goal.open = true;
+                    flow += goal.flow_rate;
                     continue;
                 }
-                if (!current_valve.open && (toVisitFiltered == null || toVisitFiltered.Count == 0))
-                {
-                    current_valve.open = true;
-                    flow += current_valve.flow_rate;
-                    continue;
-                }
-                bool toContinue = false;
-                foreach (Valve v in toVisit)
-                {
-                    if (!v.visited)
-                    {
-                        current_valve = v;
-                        toContinue = true;
-                        break;
-                    }
-                }
-                if (toContinue)
-                    continue;
-
-                IEnumerable<Valve> closedValves = valves.Values.Where(v => !v.open && v.flow_rate > 0);
-                if (closedValves.Count() == 1)
-                {
-                    if (current_valve.valves.Contains(closedValves.First().id))
-                    {
-                        current_valve = closedValves.First();
-                        continue;
-                    }
-                }
-
-                current_valve = toVisit.First();
+                while (goal.parent != current_valve)
+                    goal = goal.parent;
+                current_valve = goal;
             }
 
             return pressure;
@@ -104,7 +73,8 @@ namespace AdventOfCode2022.Days
         public int flow_rate;
         public string[] valves;
         public bool open = false;
-        public bool visited = false;
+        public long score = 0;
+        public Valve parent;
 
         public Valve(string id, int flow_rate, string[] valves)
         {
@@ -113,19 +83,26 @@ namespace AdventOfCode2022.Days
             this.valves = valves;
         }
 
+        public void CalculateScore(Dictionary<string, Valve> dict, int depth, Valve v)
+        {
+            long score = flow_rate - (depth * depth);
+            if (this.score > score)
+                return;
+            this.score = score;
+            parent = v;
+            foreach (string s in valves)
+            {
+                dict[s].CalculateScore(dict, depth + 1, this);
+            }
+            if (open)
+                this.score = 0;
+        }
+
         public int CompareTo(Valve? other)
         {
             if (other == null)
                 return 1;
-            return flow_rate - other.flow_rate;
-        }
-    }
-
-    internal class SortValveByPaths : IComparer<Valve>
-    {
-        public int Compare(Valve? x, Valve? y)
-        {
-            return y.valves.Length - x.valves.Length;
+            return (int)(score - other.score);
         }
     }
 }
