@@ -24,17 +24,27 @@ namespace AdventOfCode2022.Days
 
                 Console.WriteLine($"Current Valve: {current_valve.id}");
 
-                current_valve.CalculateScore(valves, 0, current_valve);
+                current_valve.CalculateScore(valves, 0, current_valve, i);
                 Valve goal = valves.Values.Max();
 
-                Console.WriteLine($"Target Valve: {goal.id} [score={goal.score}]");
+                Console.WriteLine($"Target Valve: {goal.id} [score={goal.score}, depth={goal.depth}]");
+                if (goal.score == int.MinValue)
+                {
+                    Console.WriteLine("Target Score at minimum, displaying full sorted list");
+                    List<Valve> debugList = valves.Values.ToList();
+                    debugList.Sort();
+                    foreach (Valve v in debugList)
+                        Console.WriteLine($"[{v.id}, {v.score}, {v.depth}]");
+                }
 
                 if (goal == current_valve)
                 {
-                    Console.WriteLine(0);
-                    current_valve.open = true;
-                    flow += current_valve.flow_rate;
-                    Console.WriteLine($"Opening {current_valve.id}");
+                    if (!current_valve.open)
+                    {
+                        current_valve.open = true;
+                        flow += current_valve.flow_rate;
+                        Console.WriteLine($"Opening {current_valve.id}");
+                    }
                     Console.WriteLine("----------------------------------------");
                     continue;
                 }
@@ -93,8 +103,9 @@ namespace AdventOfCode2022.Days
         public int flow_rate;
         public string[] valves;
         public bool open = false;
-        public long score = long.MinValue;
+        public long score = int.MinValue;
         public Valve parent;
+        public int depth;
 
         public Valve(string id, int flow_rate, string[] valves)
         {
@@ -103,30 +114,35 @@ namespace AdventOfCode2022.Days
             this.valves = valves;
         }
 
-        public void CalculateScore(Dictionary<string, Valve> dict, int depth, Valve v)
+        public void CalculateScore(Dictionary<string, Valve> dict, int depth, Valve v, int step)
         {
-            long score = flow_rate - (depth * depth);
+            long score = (flow_rate) - (long)Math.Pow(depth, Math.PI);
             if (this.score > score)
                 return;
             this.score = score;
             parent = v;
+            this.depth = depth;
             foreach (string s in valves)
             {
-                dict[s].CalculateScore(dict, depth + 1, this);
+                dict[s].CalculateScore(dict, depth + 1, this, step);
             }
             if (open)
-                this.score = 0;
+                this.score = int.MinValue;
         }
 
         public void ClearScore()
         {
-            score = long.MinValue;
+            score = int.MinValue;
         }
 
         public int CompareTo(Valve? other)
         {
             if (other == null)
                 return 1;
+            if (score == other.score)
+                return other.depth - depth;
+            if (score == int.MinValue)
+                return -1;
             return (int)(score - other.score);
         }
     }
