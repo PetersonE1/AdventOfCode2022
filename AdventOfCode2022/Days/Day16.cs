@@ -19,16 +19,19 @@ namespace AdventOfCode2022.Days
             current_valve.CalculateCost(valves, 0, current_valve);
             List<Valve> sortedValves = valves.Values.ToList();
 
-            while (!sortedValves.IsSorted())
+            int iter = 0;
+            int MAX_ITER = 100;
+            while (!sortedValves.IsSorted() && iter < MAX_ITER)
             {
                 sortedValves.Sort();
                 for (int i = 0; i < sortedValves.Count; i++)
                     sortedValves[i].cost_additive = i * sortedValves[i].flow_rate;
+                iter++;
             }
 
             Console.WriteLine("Calculated Costs, displaying sorted list...");
             foreach (Valve v in sortedValves)
-                Console.WriteLine($"Valve {v.id} [cost={v.cost}, tCost = {v.cost - v.cost_additive}]");
+                Console.WriteLine($"Valve {v.id} [cost={v.cost}, tCost = {v.cost + v.cost_additive}]");
 
             int index = 0;
             for (int i = 0; i < 30; i++)
@@ -45,8 +48,8 @@ namespace AdventOfCode2022.Days
                 }
                 current_valve.CalculatePaths(valves, 0, current_valve);
 
-                Console.WriteLine($"Current Valve: [id={current_valve.id}, cost={current_valve.cost}, tCost={current_valve.cost - current_valve.cost_additive}, depth={current_valve.depth}]");
-                Console.WriteLine($"Target Valve: [id={targetValve.id}, cost={targetValve.cost}, tCost={targetValve.cost - targetValve.cost_additive}, depth={targetValve.depth}]");
+                Console.WriteLine($"Current Valve: [id={current_valve.id}, cost={current_valve.cost}, tCost={current_valve.cost + current_valve.cost_additive}, depth={current_valve.depth}]");
+                Console.WriteLine($"Target Valve: [id={targetValve.id}, cost={targetValve.cost}, tCost={targetValve.cost + targetValve.cost_additive}, depth={targetValve.depth}]");
 
                 if (targetValve == current_valve && !current_valve.open)
                 {
@@ -162,8 +165,8 @@ namespace AdventOfCode2022.Days
         {
             if (other == null)
                 return 1;
-            long tCost = cost - cost_additive;
-            long c_tCost = other.cost - other.cost_additive;
+            long tCost = cost + cost_additive;
+            long c_tCost = other.cost + other.cost_additive;
             if (tCost == c_tCost)
                 return other.depth - depth;
             if (cost == int.MinValue)
