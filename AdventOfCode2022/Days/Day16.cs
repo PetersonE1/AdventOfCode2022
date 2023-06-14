@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,51 +16,60 @@ namespace AdventOfCode2022.Days
             int flow = 0;
 
             Valve current_valve = valves["AA"];
+            current_valve.CalculateCost(valves, 0, current_valve);
+            List<Valve> sortedValves = valves.Values.ToList();
+
+            while (!sortedValves.IsSorted())
+            {
+                sortedValves.Sort();
+                for (int i = 0; i < sortedValves.Count; i++)
+                    sortedValves[i].cost_additive = i * sortedValves[i].flow_rate;
+            }
+
+            Console.WriteLine("Calculated Costs, displaying sorted list...");
+            foreach (Valve v in sortedValves)
+                Console.WriteLine($"Valve {v.id} [cost={v.cost}]");
+
+            int index = 0;
             for (int i = 0; i < 30; i++)
             {
                 pressure += flow;
 
+                if (index >= sortedValves.Count)
+                    continue;
+
+                Valve targetValve = sortedValves[index];
                 foreach (Valve v in valves.Values)
-                    v.ClearScore();
-
-                Console.WriteLine($"Current Valve: {current_valve.id}");
-
-                current_valve.CalculateScore(valves, 0, current_valve, i);
-                Valve goal = valves.Values.Max();
-
-                Console.WriteLine($"Target Valve: {goal.id} [score={goal.score}, depth={goal.depth}]");
-                if (goal.score == int.MinValue)
                 {
-                    Console.WriteLine("Target Score at minimum, displaying full sorted list");
-                    List<Valve> debugList = valves.Values.ToList();
-                    debugList.Sort();
-                    foreach (Valve v in debugList)
-                        Console.WriteLine($"[{v.id}, {v.score}, {v.depth}]");
+                    v.ResetPath();
                 }
+                current_valve.CalculatePaths(valves, 0, current_valve);
 
-                if (goal == current_valve)
+                Console.WriteLine($"Current Valve: [id={current_valve.id}, cost={current_valve.cost}, depth={current_valve.depth}]");
+                Console.WriteLine($"Target Valve: [id={targetValve.id}, cost={targetValve.cost}, depth={targetValve.depth}]");
+
+                if (targetValve == current_valve && !current_valve.open)
                 {
-                    if (!current_valve.open)
-                    {
-                        current_valve.open = true;
-                        flow += current_valve.flow_rate;
-                        Console.WriteLine($"Opening {current_valve.id}");
-                    }
+                    current_valve.open = true;
+                    flow += current_valve.flow_rate;
+                    Console.WriteLine($"Opening {current_valve.id}");
+                    index++;
                     Console.WriteLine("----------------------------------------");
                     continue;
                 }
                 int a = 0;
-                while (goal.parent != current_valve && a < 10)
+
+                while (targetValve.parent != current_valve && a < 10)
                 {
-                    goal = goal.parent;
+                    targetValve = targetValve.parent;
                     a++;
                 }
                 if (a >= 10)
                 {
-                    Console.WriteLine($"Broken, Goal Parent: {goal.parent.id}");
+                    Console.WriteLine($"Broken, Goal Parent: {targetValve.parent.id}");
                     return 0;
                 }
-                current_valve = goal;
+                current_valve = targetValve;
                 Console.WriteLine($"Moving to {current_valve.id}");
                 Console.WriteLine("----------------------------------------");
             }
@@ -103,9 +113,10 @@ namespace AdventOfCode2022.Days
         public int flow_rate;
         public string[] valves;
         public bool open = false;
-        public long score = int.MinValue;
+        public long cost = -1;
+        public long cost_additive = 0;
         public Valve parent;
-        public int depth;
+        public int depth = int.MaxValue;
 
         public Valve(string id, int flow_rate, string[] valves)
         {
@@ -114,36 +125,50 @@ namespace AdventOfCode2022.Days
             this.valves = valves;
         }
 
-        public void CalculateScore(Dictionary<string, Valve> dict, int depth, Valve v, int step)
+        public void CalculateCost(Dictionary<string, Valve> dict, int depth, Valve v)
         {
-            long score = (flow_rate) - (long)Math.Pow(depth, Math.PI);
-            if (this.score > score)
+            if (depth > 30)
                 return;
-            this.score = score;
+            long cost = flow_rate * (30 - depth);
+            if (this.cost > cost)
+                return;
+            this.cost = cost;
             parent = v;
             this.depth = depth;
             foreach (string s in valves)
             {
-                dict[s].CalculateScore(dict, depth + 1, this, step);
+                dict[s].CalculateCost(dict, depth + 1, this);
             }
-            if (open)
-                this.score = int.MinValue;
         }
 
-        public void ClearScore()
+        public void CalculatePaths(Dictionary<string, Valve> dict, int depth, Valve v)
         {
-            score = int.MinValue;
+            if (this.depth < depth)
+                return;
+            this.depth = depth;
+            parent = v;
+            foreach (string s in valves)
+            {
+                dict[s].CalculatePaths(dict, depth + 1, this);
+            }
+        }
+
+        public void ResetPath()
+        {
+            this.depth = int.MaxValue;
         }
 
         public int CompareTo(Valve? other)
         {
             if (other == null)
                 return 1;
-            if (score == other.score)
+            long tCost = cost + cost_additive;
+            long c_tCost = other.cost + other.cost_additive;
+            if (tCost == c_tCost)
                 return other.depth - depth;
-            if (score == int.MinValue)
+            if (cost == int.MinValue)
                 return -1;
-            return (int)(score - other.score);
+            return (int)(c_tCost - tCost);
         }
     }
 }

@@ -106,6 +106,16 @@ namespace AdventOfCode2022
             return s;
         }
 
+        public static bool IsSorted<T>(this List<T> list) where T : IComparable<T>
+        {
+            for (int i = 1; i < list.Count; i++)
+            {
+                if (list[i].CompareTo(list[i - 1]) < 0)
+                    return false;
+            }
+            return true;
+        }
+
         public static string LoadInput(string fileName, bool testFile)
         {
             string file;
