@@ -9,11 +9,68 @@ namespace AdventOfCode2022.Days
 {
     internal static class Day16
     {
+        const int INF = 99999;
+        private static void Print(int[,] distance, int verticesCount)
+        {
+            Console.WriteLine("Shortest distances between every pair of vertices:");
+
+            for (int i = 0; i < verticesCount; ++i)
+            {
+                for (int j = 0; j < verticesCount; ++j)
+                {
+                    if (distance[i, j] == INF)
+                        Console.Write("INF".PadLeft(7));
+                    else
+                        Console.Write(distance[i, j].ToString().PadLeft(7));
+                }
+
+                Console.WriteLine();
+            }
+        }
+
+        public static void FloydWarshall(int[,] graph, int verticesCount)
+        {
+            int[,] distance = new int[verticesCount, verticesCount];
+
+            for (int i = 0; i < verticesCount; ++i)
+                for (int j = 0; j < verticesCount; ++j)
+                    distance[i, j] = graph[i, j];
+
+            for (int k = 0; k < verticesCount; ++k)
+            {
+                for (int i = 0; i < verticesCount; ++i)
+                {
+                    for (int j = 0; j < verticesCount; ++j)
+                    {
+                        if (distance[i, k] + distance[k, j] < distance[i, j])
+                            distance[i, j] = distance[i, k] + distance[k, j];
+                    }
+                }
+            }
+
+            Print(distance, verticesCount);
+        }
+
         public static long PressureRelease(string input)
         {
             Dictionary<string, Valve> valves = ParseInput(input).ToDictionary(k => k.id);
+            List<Valve> valveList = valves.Values.ToList();
             long pressure = 0;
             int flow = 0;
+
+            int[,] vGraph = new int[valveList.Count, valveList.Count];
+            for (int i = 0; i < valveList.Count; i++)
+            {
+                foreach (Valve v in valveList)
+                    v.ResetPath();
+                valveList[i].CalculatePaths(valves, 0, valveList[i]);
+                for (int j = 0; j < valveList.Count; j++)
+                {
+                    vGraph[i, j] = valveList[j].depth;
+                }
+            }
+
+            FloydWarshall(vGraph, valveList.Count);
 
             Valve current_valve = valves["AA"];
             current_valve.CalculateCost(valves, 0, current_valve);
@@ -46,6 +103,7 @@ namespace AdventOfCode2022.Days
                 {
                     v.ResetPath();
                 }
+                current_valve.CalculateCost(valves, 0, current_valve);
                 current_valve.CalculatePaths(valves, 0, current_valve);
 
                 Console.WriteLine($"Current Valve: [id={current_valve.id}, cost={current_valve.cost}, tCost={current_valve.cost + current_valve.cost_additive}, depth={current_valve.depth}]");

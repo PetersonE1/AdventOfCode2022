@@ -116,6 +116,11 @@ namespace AdventOfCode2022
             return true;
         }
 
+        public static int UnitFunc(double value)
+        {
+            return value < 0 ? 0 : 1;
+        }
+
         public static string LoadInput(string fileName, bool testFile)
         {
             string file;
