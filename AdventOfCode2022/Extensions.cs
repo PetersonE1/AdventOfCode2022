@@ -9,12 +9,12 @@ namespace AdventOfCode2022
 {
     public static class Extensions
     {
-        public static int FindIndexOf<T>(this T[] source, T obj)
+        public static int FindIndexOf<T>(this IEnumerable<T> source, T obj)
         {
             int returnVal = 0;
-            for (int i = 0; i < source.Length; i++)
+            for (int i = 0; i < source.Count(); i++)
             {
-                if (source[i].Equals(obj))
+                if (source.ElementAt(i).Equals(obj))
                 {
                     returnVal = i;
                     break;
@@ -23,12 +23,12 @@ namespace AdventOfCode2022
             return returnVal;
         }
 
-        public static int[] FindIdexesOf<T>(this T[] source, T obj)
+        public static int[] FindIdexesOf<T>(this IEnumerable<T> source, T obj)
         {
             List<int> returnVal = new List<int>();
-            for (int i = 0; i < source.Length; i++)
+            for (int i = 0; i < source.Count(); i++)
             {
-                if (source[i].Equals(obj))
+                if (source.ElementAt(i).Equals(obj))
                 {
                     returnVal.Add(i);
                 }
@@ -46,6 +46,13 @@ namespace AdventOfCode2022
         {
             foreach (T item in range)
                 list.Remove(item);
+        }
+
+        public static List<T> NewWithRemoved<T>(this List<T> list, T obj)
+        {
+            List<T> values = new List<T>(list);
+            values.Remove(obj);
+            return values;
         }
 
         public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action)

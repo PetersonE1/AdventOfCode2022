@@ -91,7 +91,8 @@ namespace AdventOfCode2022.Days
             {
                 child.pos += new Vector2(-1, 0);
             }
-            if (diff.X > 0)
+
+            if (diff.X > 0)yyyyyyyyyyyyyyyyyyyyyyy/
             {
                 child.pos += new Vector2(1, 0);
             }

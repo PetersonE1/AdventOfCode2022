@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,10 +11,11 @@ namespace AdventOfCode2022.Days
     internal static class Day16
     {
         const int INF = 99999;
+        private static int CurrentBest;
+        private static int[] FinalPath;
+
         private static void Print(int[,] distance, int verticesCount)
         {
-            Console.WriteLine("Shortest distances between every pair of vertices:");
-
             for (int i = 0; i < verticesCount; ++i)
             {
                 for (int j = 0; j < verticesCount; ++j)
@@ -28,13 +30,19 @@ namespace AdventOfCode2022.Days
             }
         }
 
-        public static void FloydWarshall(int[,] graph, int verticesCount)
+        public static int[,] FloydWarshall(int[,] graph, int verticesCount, out int[,] prev)
         {
             int[,] distance = new int[verticesCount, verticesCount];
+            prev = new int[verticesCount, verticesCount];
 
             for (int i = 0; i < verticesCount; ++i)
+            {
                 for (int j = 0; j < verticesCount; ++j)
+                {
                     distance[i, j] = graph[i, j];
+                    prev[i, j] = i;
+                }
+            }
 
             for (int k = 0; k < verticesCount; ++k)
             {
@@ -43,20 +51,38 @@ namespace AdventOfCode2022.Days
                     for (int j = 0; j < verticesCount; ++j)
                     {
                         if (distance[i, k] + distance[k, j] < distance[i, j])
+                        {
                             distance[i, j] = distance[i, k] + distance[k, j];
+                            prev[i, j] = prev[k, j];
+                        }
                     }
                 }
             }
+            return distance;
+        }
 
-            Print(distance, verticesCount);
+        public static int[] Path(int[,] prev, int a, int b)
+        {
+            List<int> path = new List<int>() { b };
+            while (a != b)
+            {
+                b = prev[a, b];
+                path = path.Prepend(b).ToList();
+            }
+            return path.ToArray();
         }
 
         public static long PressureRelease(string input)
         {
             Dictionary<string, Valve> valves = ParseInput(input).ToDictionary(k => k.id);
             List<Valve> valveList = valves.Values.ToList();
+            List<Valve> targetValves = valveList.Where(v => v.flow_rate > 0).ToList();
             long pressure = 0;
             int flow = 0;
+
+            int totalFlow = 0;
+            foreach (Valve v in valveList)
+                totalFlow += v.flow_rate;
 
             int[,] vGraph = new int[valveList.Count, valveList.Count];
             for (int i = 0; i < valveList.Count; i++)
@@ -66,81 +92,63 @@ namespace AdventOfCode2022.Days
                 valveList[i].CalculatePaths(valves, 0, valveList[i]);
                 for (int j = 0; j < valveList.Count; j++)
                 {
-                    vGraph[i, j] = valveList[j].depth;
+                    if (valveList[i].valves.Contains(valveList[j].id) || valveList[i] == valveList[j])
+                        vGraph[i, j] = totalFlow - valveList[j].flow_rate;
+                    else
+                        vGraph[i, j] = INF;
                 }
             }
 
-            FloydWarshall(vGraph, valveList.Count);
+            int[,] distance = FloydWarshall(vGraph, valveList.Count, out int[,] prev);
 
-            Valve current_valve = valves["AA"];
-            current_valve.CalculateCost(valves, 0, current_valve);
-            List<Valve> sortedValves = valves.Values.ToList();
+            Console.WriteLine("Edges between all vertices:");
+            Print(vGraph, valveList.Count);
+            Console.WriteLine("Shortest distances between every pair of vertices:");
+            Print(distance, valveList.Count);
+            Console.WriteLine("Previous vertice of each vertice in most efficient path:");
+            Print(prev, valveList.Count);
 
-            int iter = 0;
-            int MAX_ITER = 100;
-            while (!sortedValves.IsSorted() && iter < MAX_ITER)
+            FinalPath = new int[targetValves.Count+1];
+            int length = distance[0, targetValves[0].index];
+            for (int i = 0; i < targetValves.Count - 1; i++)
             {
-                sortedValves.Sort();
-                for (int i = 0; i < sortedValves.Count; i++)
-                    sortedValves[i].cost_additive = i * sortedValves[i].flow_rate;
-                iter++;
+                length += distance[targetValves[i].index, targetValves[i + 1].index];
             }
+            Console.WriteLine(length);
 
-            Console.WriteLine("Calculated Costs, displaying sorted list...");
-            foreach (Valve v in sortedValves)
-                Console.WriteLine($"Valve {v.id} [cost={v.cost}, tCost = {v.cost + v.cost_additive}]");
-
-            int index = 0;
-            for (int i = 0; i < 30; i++)
-            {
-                pressure += flow;
-
-                if (index >= sortedValves.Count)
-                    continue;
-
-                Valve targetValve = sortedValves[index];
-                foreach (Valve v in valves.Values)
-                {
-                    v.ResetPath();
-                }
-                current_valve.CalculateCost(valves, 0, current_valve);
-                current_valve.CalculatePaths(valves, 0, current_valve);
-
-                Console.WriteLine($"Current Valve: [id={current_valve.id}, cost={current_valve.cost}, tCost={current_valve.cost + current_valve.cost_additive}, depth={current_valve.depth}]");
-                Console.WriteLine($"Target Valve: [id={targetValve.id}, cost={targetValve.cost}, tCost={targetValve.cost + targetValve.cost_additive}, depth={targetValve.depth}]");
-
-                if (targetValve == current_valve && !current_valve.open)
-                {
-                    current_valve.open = true;
-                    flow += current_valve.flow_rate;
-                    Console.WriteLine($"Opening {current_valve.id}");
-                    index++;
-                    Console.WriteLine("----------------------------------------");
-                    continue;
-                }
-                int a = 0;
-
-                while (targetValve.parent != current_valve && a < 10)
-                {
-                    targetValve = targetValve.parent;
-                    a++;
-                }
-                if (a >= 10)
-                {
-                    Console.WriteLine($"Broken, Goal Parent: {targetValve.parent.id}");
-                    return 0;
-                }
-                current_valve = targetValve;
-                Console.WriteLine($"Moving to {current_valve.id}");
-                Console.WriteLine("----------------------------------------");
-            }
+            CurrentBest = length;
+            int[] path = new int[targetValves.Count];
+            Console.WriteLine(CheckPath(distance, targetValves, 0));
+            foreach (int i in FinalPath)
+                Console.Write($"{i}, ");
+            Console.WriteLine();
 
             return pressure;
+        }
+
+        public static int CheckPath(int[,] distances, List<Valve> remaining, int current, int length = 0, int depth = 0)
+        {
+            if (length > CurrentBest)
+            {
+                return INF;
+            }
+            FinalPath[depth] = current;
+            if (remaining.Count == 0)
+            {
+                CurrentBest = length;
+                return length;
+            }
+            foreach (Valve v in remaining)
+            {
+                length = CheckPath(distances, remaining.NewWithRemoved(v), v.index, length + distances[current, v.index], depth + 1);
+            }
+            return CurrentBest;
         }
 
         public static Valve[] ParseInput(string input)
         {
             List<Valve> valves = new List<Valve>();
+            int index = 0;
             foreach (string line in input.Split("\r\n"))
             {
                 string valve = string.Empty;
@@ -161,8 +169,9 @@ namespace AdventOfCode2022.Days
                     }
                 }
 
-                Valve v = new Valve(valve, flow, outs.ToArray());
+                Valve v = new Valve(valve, index, flow, outs.ToArray());
                 valves.Add(v);
+                index++;
             }
             return valves.ToArray();
         }
@@ -171,6 +180,7 @@ namespace AdventOfCode2022.Days
     internal class Valve : IComparable<Valve>
     {
         public string id;
+        public int index;
         public int flow_rate;
         public string[] valves;
         public bool open = false;
@@ -179,9 +189,10 @@ namespace AdventOfCode2022.Days
         public Valve parent;
         public int depth = int.MaxValue;
 
-        public Valve(string id, int flow_rate, string[] valves)
+        public Valve(string id, int index, int flow_rate, string[] valves)
         {
             this.id = id;
+            this.index = index;
             this.flow_rate = flow_rate;
             this.valves = valves;
         }
