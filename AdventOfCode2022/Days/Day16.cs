@@ -115,9 +115,8 @@ namespace AdventOfCode2022.Days
         private static long FollowPath(int index, List<int> unvisited, int[,] distances, List<Valve> valves, int depth, long flow = 0)
         {
             long best_flow = 0;
-            foreach (int i in unvisited)
+            foreach (int next in unvisited)
             {
-                int next = unvisited[i];
                 int t_depth = depth + distances[index, next] + 1;
                 if (depth > 20)
                     continue;
