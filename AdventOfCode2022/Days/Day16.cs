@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -11,8 +12,6 @@ namespace AdventOfCode2022.Days
     internal static class Day16
     {
         const int INF = 99999;
-        private static int CurrentBest;
-        private static int[] FinalPath;
 
         private static void Print(int[,] distance, int verticesCount)
         {
@@ -78,22 +77,18 @@ namespace AdventOfCode2022.Days
             List<Valve> valveList = valves.Values.ToList();
             List<Valve> targetValves = valveList.Where(v => v.flow_rate > 0).ToList();
             long pressure = 0;
-            int flow = 0;
-
-            int totalFlow = 0;
-            foreach (Valve v in valveList)
-                totalFlow += v.flow_rate;
 
             int[,] vGraph = new int[valveList.Count, valveList.Count];
             for (int i = 0; i < valveList.Count; i++)
             {
                 foreach (Valve v in valveList)
                     v.ResetPath();
-                valveList[i].CalculatePaths(valves, 0, valveList[i]);
                 for (int j = 0; j < valveList.Count; j++)
                 {
-                    if (valveList[i].valves.Contains(valveList[j].id) || valveList[i] == valveList[j])
-                        vGraph[i, j] = totalFlow - valveList[j].flow_rate;
+                    if (valveList[i] == valveList[j])
+                        vGraph[i, j] = 0;
+                    else if (valveList[i].valves.Contains(valveList[j].id))
+                        vGraph[i, j] = 1;
                     else
                         vGraph[i, j] = INF;
                 }
@@ -108,41 +103,32 @@ namespace AdventOfCode2022.Days
             Console.WriteLine("Previous vertice of each vertice in most efficient path:");
             Print(prev, valveList.Count);
 
-            FinalPath = new int[targetValves.Count+1];
-            int length = distance[0, targetValves[0].index];
-            for (int i = 0; i < targetValves.Count - 1; i++)
-            {
-                length += distance[targetValves[i].index, targetValves[i + 1].index];
-            }
-            Console.WriteLine(length);
-
-            CurrentBest = length;
-            int[] path = new int[targetValves.Count];
-            Console.WriteLine(CheckPath(distance, targetValves, 0));
-            foreach (int i in FinalPath)
-                Console.Write($"{i}, ");
-            Console.WriteLine();
+            // Follow all paths
+            List<int> unvisited = new List<int>();
+            for (int i = 0; i < valveList.Count; i++)
+                unvisited.Add(i);
+            pressure = FollowPath(0, unvisited, distance, valveList, 0);
 
             return pressure;
         }
 
-        public static int CheckPath(int[,] distances, List<Valve> remaining, int current, int length = 0, int depth = 0)
+        private static long FollowPath(int index, List<int> unvisited, int[,] distances, List<Valve> valves, int depth, long flow = 0)
         {
-            if (length > CurrentBest)
+            long best_flow = 0;
+            foreach (int i in unvisited)
             {
-                return INF;
+                int next = unvisited[i];
+                int t_depth = depth + distances[index, next] + 1;
+                if (depth > 20)
+                    continue;
+                long t_flow = flow + valves[next].flow_rate * (20 - depth);
+                List<int> t_unvisited = unvisited.ToList();
+                t_unvisited.Remove(next);
+                t_flow += FollowPath(next, t_unvisited, distances, valves, t_depth, t_flow);
+                if (t_flow > best_flow)
+                    best_flow = t_flow;
             }
-            FinalPath[depth] = current;
-            if (remaining.Count == 0)
-            {
-                CurrentBest = length;
-                return length;
-            }
-            foreach (Valve v in remaining)
-            {
-                length = CheckPath(distances, remaining.NewWithRemoved(v), v.index, length + distances[current, v.index], depth + 1);
-            }
-            return CurrentBest;
+            return best_flow;
         }
 
         public static Valve[] ParseInput(string input)
