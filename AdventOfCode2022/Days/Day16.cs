@@ -106,26 +106,76 @@ namespace AdventOfCode2022.Days
             // Follow all paths
             List<int> unvisited = new List<int>();
             for (int i = 0; i < valveList.Count; i++)
-                unvisited.Add(i);
-            pressure = FollowPath(0, unvisited, distance, valveList, 0);
+                if (valveList[i].flow_rate > 0)
+                    unvisited.Add(i);
+            //pressure = FollowPath(0, unvisited, distance, valveList, 0);
+            pressure = DepthFirst(distance, valveList, unvisited);
 
             return pressure;
         }
 
-        private static long FollowPath(int index, List<int> unvisited, int[,] distances, List<Valve> valves, int depth, long flow = 0)
+        private static long DepthFirst(int[,] distances, List<Valve> valves, List<int> unvisited)
+        {
+            List<List<int>> lists = new List<List<int>>();
+            for (int i = 0; i < unvisited.Count; i++)
+            {
+                lists.Add(unvisited.ToList());
+            }
+
+            long best_flow = 0;
+            foreach (var list in lists.GenerateCombinations())
+            {
+                /*if (!list.SequenceEqual(list.Distinct()))
+                {
+                    continue;
+                }*/
+                var diffChecker = new HashSet<int>();
+                bool allDifferent = list.All(diffChecker.Add);
+                if (!allDifferent)
+                    continue;
+
+                int currentValve = 0;
+                long flow = 0;
+                int time = 30;
+                //List<int> remaining = list.ToList();
+                foreach (int i in list)
+                {
+                    //remaining.Remove(i);
+                    time -= distances[currentValve, i] + 1;
+                    currentValve = i;
+                    flow += valves[currentValve].flow_rate * time;
+
+                    if (flow > best_flow)
+                        best_flow = flow;
+
+                    /*long maximum_flow = flow;
+                    foreach (int j in remaining)
+                    {
+                        maximum_flow += valves[j].flow_rate * time;
+                    }
+                    if (maximum_flow < best_flow)
+                        break;*/
+                }
+            }
+            return best_flow;
+        }
+
+        private static long FollowPath(int index, List<int> unvisited, int[,] distances, List<Valve> valves, int depth)
         {
             long best_flow = 0;
             foreach (int next in unvisited)
             {
+                long flow = 0;
                 int t_depth = depth + distances[index, next] + 1;
-                if (depth > 20)
+                if (t_depth > 30)
                     continue;
-                long t_flow = flow + valves[next].flow_rate * (20 - depth);
+                flow += valves[next].flow_rate * (30 - t_depth);
+                //Console.WriteLine($"{valves[next].id}: [flow_rate: {valves[next].flow_rate}, time_remaining: {30 - t_depth}, total_gain: {valves[next].flow_rate * (30 - t_depth)}]");
                 List<int> t_unvisited = unvisited.ToList();
                 t_unvisited.Remove(next);
-                t_flow += FollowPath(next, t_unvisited, distances, valves, t_depth, t_flow);
-                if (t_flow > best_flow)
-                    best_flow = t_flow;
+                flow += FollowPath(next, t_unvisited, distances, valves, t_depth);
+                if (flow > best_flow)
+                    best_flow = flow;
             }
             return best_flow;
         }
