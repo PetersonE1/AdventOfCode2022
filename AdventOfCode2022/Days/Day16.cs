@@ -60,7 +60,7 @@ namespace AdventOfCode2022.Days
             return distance;
         }
 
-        public static long PressureRelease(string input)
+        public static long PressureRelease(string input, bool firstDay)
         {
             Dictionary<string, Valve> valves = ParseInput(input).ToDictionary(k => k.id);
             List<Valve> valveList = valves.Values.ToList();
@@ -98,12 +98,52 @@ namespace AdventOfCode2022.Days
             Print(prev, valveList.Count);
 
             valves = valves.Where(v => v.Value.flow_rate > 0 || v.Value.id == "AA").ToDictionary(v => v.Key, v => v.Value);
-            pressure = DepthFirst(distance, valves, "AA", 30);
+            if (firstDay)
+                return DepthFirst(valves, "AA", 30);
 
-            return pressure;
+            return Elephant(valves, "AA", 26);
         }
 
-        private static long DepthFirst(int[,] distance, Dictionary<string, Valve> valves, string start, int rounds)
+        private static long Elephant(Dictionary<string, Valve> valves, string start, int rounds)
+        {
+            Valve start_node = valves[start];
+
+            List<Valve> unopened = valves.Values.Where(v => v.id != start).ToList();
+
+            int split_count = unopened.Count / 2;
+            int split_mod = unopened.Count % 2;
+            Valve[][] splits = combinations(unopened, split_count + split_mod);
+
+            List<long> best_flow = new List<long>();
+
+            for (int i = 0; i < splits.Length; i++)
+            {
+                List<Valve> temp = unopened.ToList();
+                for (int j = 0; j < splits[i].Length; j++)
+                {
+                    int index = temp.FindIndex(n => n.id == splits[i][j].id);
+                    if (index > -1)
+                    {
+                        temp.RemoveAt(index);
+                    }
+                }
+
+                Dictionary<string, Valve> splitsDict = splits[i].ToDictionarySafe(k => k.id);
+                Dictionary<string, Valve> tempDict = temp.ToDictionarySafe(k => k.id);
+                splitsDict.Add(start, start_node);
+                tempDict.Add(start, start_node);
+
+                best_flow.Add(
+                    DepthFirst(splitsDict, start, rounds)
+                    + DepthFirst(tempDict, start, rounds));
+            }
+
+            best_flow.Sort((a, b) => (int)(b - a));
+
+            return best_flow[0];
+        }
+
+        private static long DepthFirst(Dictionary<string, Valve> valves, string start, int rounds)
         {
             Queue<Step> queue = new Queue<Step>();
             queue.Enqueue(new Step()
@@ -157,6 +197,31 @@ namespace AdventOfCode2022.Days
             calculation.total_flow = (calculation.flow_rate * (rounds - calculation.steps)) + calculation.flow;
 
             return calculation;
+        }
+
+        private static Valve[][] combinations(List<Valve> unopened, int length)
+        {
+            if (length == 0) return new Valve[1][];
+            List<Valve[]> result = new List<Valve[]>();
+            for (int i = 0; i <= unopened.Count - length; i++)
+            {
+
+                Valve[][] sub_result = combinations(unopened.Slice(i + 1), length - 1);
+                foreach (Valve[] combination in sub_result)
+                {
+                    List<Valve> valves = new List<Valve>
+                    {
+                        unopened[i]
+                    };
+
+                    if (combination != null)
+                        foreach (Valve v in combination)
+                            valves.Add(v);
+
+                    result.Add(valves.ToArray());
+                }
+            }
+            return result.ToArray();
         }
 
         public static Valve[] ParseInput(string input)

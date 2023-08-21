@@ -99,25 +99,28 @@ namespace AdventOfCode2022
             return values.ToArray();
         }
 
-        public static IEnumerable<T[]> GenerateCombinations<T>(this IReadOnlyList<IReadOnlyList<T>> input)
+        public static T[] Combine<T>(this T[][] input)
         {
-            var result = new T[input.Count];
-            var indices = new int[input.Count];
-            for (int pos = 0, index = 0; ;)
+            List<T> values = new List<T>();
+            foreach (T[] value in input)
+                values.AddRange(value);
+            return values.ToArray();
+        }
+
+        public static List<T> Slice<T>(this List<T> input, int index)
+        {
+            int count = input.Count - index;
+            return input.GetRange(index, count);
+        }
+
+        public static Dictionary<TKey, TValue> ToDictionarySafe<TKey, TValue>(this IEnumerable<TValue> input, Func<TValue, TKey> keySelector) where TKey : notnull
+        {
+            Dictionary<TKey, TValue> dictionary = new Dictionary<TKey, TValue>();
+            foreach (TValue item in input)
             {
-                for (; pos < result.Length; pos++, index = 0)
-                {
-                    indices[pos] = index;
-                    result[pos] = input[pos][index];
-                }
-                yield return result;
-                do
-                {
-                    if (pos == 0) yield break;
-                    index = indices[--pos] + 1;
-                }
-                while (index >= input[pos].Count);
+                dictionary.TryAdd(keySelector.Invoke(item), item);
             }
+            return dictionary;
         }
 
         public static string ToHumanString<T>(this IEnumerable<T> enumerable)

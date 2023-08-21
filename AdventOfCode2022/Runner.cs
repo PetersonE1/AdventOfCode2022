@@ -161,7 +161,7 @@ namespace AdventOfCode2022
         private static void RunDay16(bool firstDay, bool runTest = false)
         {
             string input = Extensions.LoadInput("Day16", runTest);
-            Console.WriteLine(Days.Day16.PressureRelease(input));
+            Console.WriteLine(Days.Day16.PressureRelease(input, firstDay));
         }
     }
 }
