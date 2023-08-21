@@ -60,29 +60,15 @@ namespace AdventOfCode2022.Days
             return distance;
         }
 
-        public static int[] Path(int[,] prev, int a, int b)
-        {
-            List<int> path = new List<int>() { b };
-            while (a != b)
-            {
-                b = prev[a, b];
-                path = path.Prepend(b).ToList();
-            }
-            return path.ToArray();
-        }
-
         public static long PressureRelease(string input)
         {
             Dictionary<string, Valve> valves = ParseInput(input).ToDictionary(k => k.id);
             List<Valve> valveList = valves.Values.ToList();
-            List<Valve> targetValves = valveList.Where(v => v.flow_rate > 0).ToList();
             long pressure = 0;
 
             int[,] vGraph = new int[valveList.Count, valveList.Count];
             for (int i = 0; i < valveList.Count; i++)
             {
-                foreach (Valve v in valveList)
-                    v.ResetPath();
                 for (int j = 0; j < valveList.Count; j++)
                 {
                     if (valveList[i] == valveList[j])
@@ -96,6 +82,14 @@ namespace AdventOfCode2022.Days
 
             int[,] distance = FloydWarshall(vGraph, valveList.Count, out int[,] prev);
 
+            for (int i = 0; i < valveList.Count; i++)
+            {
+                for (int j = 0; j < valveList.Count; j++)
+                {
+                    valveList[i].edges.Add(valveList[j].id, distance[i, j] + 1);
+                }
+            }
+
             Console.WriteLine("Edges between all vertices:");
             Print(vGraph, valveList.Count);
             Console.WriteLine("Shortest distances between every pair of vertices:");
@@ -103,81 +97,66 @@ namespace AdventOfCode2022.Days
             Console.WriteLine("Previous vertice of each vertice in most efficient path:");
             Print(prev, valveList.Count);
 
-            // Follow all paths
-            List<int> unvisited = new List<int>();
-            for (int i = 0; i < valveList.Count; i++)
-                if (valveList[i].flow_rate > 0)
-                    unvisited.Add(i);
-            //pressure = FollowPath(0, unvisited, distance, valveList, 0);
-            pressure = DepthFirst(distance, valveList, unvisited);
+            valves = valves.Where(v => v.Value.flow_rate > 0 || v.Value.id == "AA").ToDictionary(v => v.Key, v => v.Value);
+            pressure = DepthFirst(distance, valves, "AA", 30);
 
             return pressure;
         }
 
-        private static long DepthFirst(int[,] distances, List<Valve> valves, List<int> unvisited)
+        private static long DepthFirst(int[,] distance, Dictionary<string, Valve> valves, string start, int rounds)
         {
-            List<List<int>> lists = new List<List<int>>();
-            for (int i = 0; i < unvisited.Count; i++)
+            Queue<Step> queue = new Queue<Step>();
+            queue.Enqueue(new Step()
             {
-                lists.Add(unvisited.ToList());
-            }
+                valve = valves[start],
+                visited = new List<string>(),
+                calculation = new Step.Calculation()
+            });
 
-            long best_flow = 0;
-            foreach (var list in lists.GenerateCombinations())
+            Step winner = queue.Peek();
+            while (queue.Count > 0)
             {
-                /*if (!list.SequenceEqual(list.Distinct()))
+                Step current = queue.Dequeue();
+                current.visited.Add(current.valve.id);
+
+                if (current.calculation.total_flow > winner.calculation.total_flow)
+                    winner = current;
+
+                foreach (Valve edge in valves.Values)
                 {
-                    continue;
-                }*/
-                var diffChecker = new HashSet<int>();
-                bool allDifferent = list.All(diffChecker.Add);
-                if (!allDifferent)
-                    continue;
+                    if (current.visited.Contains(edge.id)
+                        || current.valve.id == edge.id
+                        || current.calculation.steps + current.valve.edges[edge.id] > rounds
+                        )   continue;
 
-                int currentValve = 0;
-                long flow = 0;
-                int time = 30;
-                //List<int> remaining = list.ToList();
-                foreach (int i in list)
-                {
-                    //remaining.Remove(i);
-                    time -= distances[currentValve, i] + 1;
-                    currentValve = i;
-                    flow += valves[currentValve].flow_rate * time;
+                    Step.Calculation new_calculation = new Step.Calculation();
+                    new_calculation.steps = current.calculation.steps + current.valve.edges[edge.id];
 
-                    if (flow > best_flow)
-                        best_flow = flow;
+                    new_calculation = calc_flow(current, edge, rounds, new_calculation);
 
-                    /*long maximum_flow = flow;
-                    foreach (int j in remaining)
+                    if (new_calculation.total_flow < winner.calculation.total_flow
+                        && new_calculation.steps >= winner.calculation.steps)
+                        continue;
+
+                    queue.Enqueue(new Step()
                     {
-                        maximum_flow += valves[j].flow_rate * time;
-                    }
-                    if (maximum_flow < best_flow)
-                        break;*/
+                        valve = edge,
+                        visited = current.visited.ToList(),
+                        calculation = new_calculation
+                    });
                 }
             }
-            return best_flow;
+            return winner.calculation.total_flow;
         }
 
-        private static long FollowPath(int index, List<int> unvisited, int[,] distances, List<Valve> valves, int depth)
+        private static Step.Calculation calc_flow(Step current, Valve edge, int rounds, Step.Calculation calculation)
         {
-            long best_flow = 0;
-            foreach (int next in unvisited)
-            {
-                long flow = 0;
-                int t_depth = depth + distances[index, next] + 1;
-                if (t_depth > 30)
-                    continue;
-                flow += valves[next].flow_rate * (30 - t_depth);
-                //Console.WriteLine($"{valves[next].id}: [flow_rate: {valves[next].flow_rate}, time_remaining: {30 - t_depth}, total_gain: {valves[next].flow_rate * (30 - t_depth)}]");
-                List<int> t_unvisited = unvisited.ToList();
-                t_unvisited.Remove(next);
-                flow += FollowPath(next, t_unvisited, distances, valves, t_depth);
-                if (flow > best_flow)
-                    best_flow = flow;
-            }
-            return best_flow;
+            calculation.flow = (current.calculation.flow_rate * current.valve.edges[edge.id]) + current.calculation.flow;
+
+            calculation.flow_rate = current.calculation.flow_rate + edge.flow_rate;
+            calculation.total_flow = (calculation.flow_rate * (rounds - calculation.steps)) + calculation.flow;
+
+            return calculation;
         }
 
         public static Valve[] ParseInput(string input)
@@ -212,17 +191,14 @@ namespace AdventOfCode2022.Days
         }
     }
 
-    internal class Valve : IComparable<Valve>
+    internal class Valve
     {
         public string id;
         public int index;
         public int flow_rate;
         public string[] valves;
-        public bool open = false;
-        public long cost = -1;
-        public long cost_additive = 0;
         public Valve parent;
-        public int depth = int.MaxValue;
+        public Dictionary<string, int> edges = new Dictionary<string, int>();
 
         public Valve(string id, int index, int flow_rate, string[] valves)
         {
@@ -231,51 +207,20 @@ namespace AdventOfCode2022.Days
             this.flow_rate = flow_rate;
             this.valves = valves;
         }
+    }
 
-        public void CalculateCost(Dictionary<string, Valve> dict, int depth, Valve v)
-        {
-            if (depth > 30)
-                return;
-            long cost = flow_rate * (30 - depth);
-            if (this.cost > cost)
-                return;
-            this.cost = cost;
-            parent = v;
-            this.depth = depth;
-            foreach (string s in valves)
-            {
-                dict[s].CalculateCost(dict, depth + 1, this);
-            }
-        }
+    internal class Step
+    {
+        public Valve valve;
+        public List<string> visited;
+        public Calculation calculation;
 
-        public void CalculatePaths(Dictionary<string, Valve> dict, int depth, Valve v)
+        public class Calculation
         {
-            if (this.depth < depth)
-                return;
-            this.depth = depth;
-            parent = v;
-            foreach (string s in valves)
-            {
-                dict[s].CalculatePaths(dict, depth + 1, this);
-            }
-        }
-
-        public void ResetPath()
-        {
-            this.depth = int.MaxValue;
-        }
-
-        public int CompareTo(Valve? other)
-        {
-            if (other == null)
-                return 1;
-            long tCost = cost + cost_additive;
-            long c_tCost = other.cost + other.cost_additive;
-            if (tCost == c_tCost)
-                return other.depth - depth;
-            if (cost == int.MinValue)
-                return -1;
-            return (int)(c_tCost - tCost);
+            public int steps = 0;
+            public int flow_rate = 0;
+            public long flow = 0;
+            public long total_flow = 0;
         }
     }
 }
