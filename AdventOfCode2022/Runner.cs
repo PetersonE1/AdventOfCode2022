@@ -32,6 +32,7 @@ namespace AdventOfCode2022
                 case "14": RunDay14(isFirst, test); break;
                 case "15": RunDay15(isFirst, test); break;
                 case "16": RunDay16(isFirst, test); break;
+                case "17": RunDay17(isFirst, test); break;
                 default: break;
             }
         }
@@ -162,6 +163,12 @@ namespace AdventOfCode2022
         {
             string input = Extensions.LoadInput("Day16", runTest);
             Console.WriteLine(Days.Day16.PressureRelease(input, firstDay));
+        }
+
+        private static void RunDay17(bool firstDay, bool runTest = false)
+        {
+            string input = Extensions.LoadInput("Day17", runTest);
+            Console.WriteLine(Days.Day17.Tetris(input));
         }
     }
 }
