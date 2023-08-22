@@ -25,7 +25,8 @@ namespace AdventOfCode2022.Days
                 PlacedRocks.Add(activeRock);
 
                 Vector2Int start = heighestRock != null ? 
-                    new Vector2Int(1, heighestRock.Position.y + heighestRock.Bounds.y + 3) : new Vector2Int(1, 2);
+                    new Vector2Int(2, heighestRock.Position.y + heighestRock.Bounds.y + 3) : new Vector2Int(2, 3);
+                activeRock.Position = start;
 
                 int jetIndex = 0;
                 while (!landed)
@@ -39,11 +40,26 @@ namespace AdventOfCode2022.Days
                     jetIndex++;
 
                     Vector2Int target = activeRock.TryShift(jetPush);
-                    if (target.x != 7 && target.x != 0 /*&& TODO check other rocks*/)
+                    target.y--;
+                    bool collided = false;
+                    bool settled = false;
+
+                    foreach (Rock other in PlacedRocks)
+                    {
+                        if (other == activeRock) continue;
+                        if (activeRock.CheckCollision(other, jetPush))
+                            collided = true;
+                        if (activeRock.CheckCollision(other, new Vector2Int(0, -1)))
+                            settled = true;
+                        if (collided && settled)
+                            break;
+                    }
+
+                    if (target.x != 8 && target.x != 0 && !collided)
                     {
                         activeRock.Shift(jetPush);
                     }
-                    if (target.y != 0 /*&& TODO check other rocks*/)
+                    if (target.y != 0 && !settled)
                     {
                         activeRock.Shift(new Vector2Int(0, -1));
                         continue;
@@ -56,11 +72,45 @@ namespace AdventOfCode2022.Days
                 }
 
                 landed = false;
-                if (activeRock.Position.y + activeRock.Bounds.y > heighestRock.Position.y + heighestRock.Bounds.y)
+                if (activeRock.Position.y + activeRock.Bounds.y - 1 > heighestRock.Position.y + heighestRock.Bounds.y - 1)
                     heighestRock = activeRock;
+                //Console.WriteLine(heighestRock.Position.y + heighestRock.Bounds.y - 1);
+                DisplayGrid(PlacedRocks);
+                Console.Read();
             }
 
-            return heighestRock.Position.y + heighestRock.Bounds.y;
+            return heighestRock.Position.y + heighestRock.Bounds.y - 1;
+        }
+
+        private static void DisplayGrid(List<Rock> rocks)
+        {
+            int width = 7;
+            int height = 50;
+
+            for (int i = height; i > 0; i--)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    bool broken = false;
+                    Vector2Int v = new Vector2Int(j, i);
+                    foreach (Rock rock in rocks)
+                    {
+                        foreach (Vector2Int unit in rock.Units)
+                        {
+                            if (unit + rock.Position == v)
+                            {
+                                Console.Write('#');
+                                broken = true;
+                                break;
+                            }
+                        }
+                        if (broken) break;
+                    }
+                    if (!broken)
+                        Console.Write('.');
+                }
+                Console.Write('\n');
+            }
         }
 
         private static Rock[] InitializeRocks()
@@ -134,13 +184,62 @@ namespace AdventOfCode2022.Days
             Range otherx = new Range(other.Position.x, other.Position.x + other.Bounds.x);
             Range thisy = new Range(Position.y, Position.y + Bounds.y);
             Range othery = new Range(other.Position.y, other.Position.y + other.Bounds.y);
-            if (!thisx.Overlaps(otherx) && !thisy.Overlaps(othery))
+            if (!thisx.Overlaps(otherx) || !thisy.Overlaps(othery))
                 return false;
 
-            // TODO: check collision of individual units; filter units to those inside overlapping bounds
+            Range overlap_x = thisx.GetOverlap(otherx);
+            Range overlap_y = thisy.GetOverlap(othery);
 
-            // DEBUG
-            return true;
+            Range check_thisx = new Range(overlap_x.Start.Value - Position.x, overlap_x.End.Value - Position.x);
+            Range check_thisy = new Range(overlap_y.Start.Value - Position.y, overlap_y.End.Value - Position.y);
+            Range check_otherx = new Range(overlap_x.Start.Value - other.Position.x, overlap_x.End.Value - other.Position.x);
+            Range check_othery = new Range(overlap_y.Start.Value - other.Position.y, overlap_y.End.Value - other.Position.y);
+
+            Vector2Int[] thisUnits = Units.Select(k => k += Position).Where(u => (u.x >= check_thisx.Start.Value && u.x <= check_thisx.End.Value)
+            && (u.y >= check_thisy.Start.Value && u.y <= check_thisy.End.Value)).ToArray();
+
+            Vector2Int[] otherUnits = other.Units.Select(k => k += other.Position).Where(u => (u.x >= check_otherx.Start.Value && u.x <= check_otherx.End.Value)
+            && (u.y >= check_othery.Start.Value && u.y <= check_othery.End.Value)).ToArray();
+
+            foreach (Vector2Int unit in thisUnits)
+                foreach (Vector2Int otherUnit in otherUnits)
+                    if (unit.Equals(otherUnit))
+                        return true;
+
+            return false;
+        }
+
+        public bool CheckCollision(Rock other, Vector2Int offset)
+        {
+            Vector2Int offsetPosition = this.TryShift(offset);
+
+            Range thisx = new Range(offsetPosition.x, offsetPosition.x + Bounds.x);
+            Range otherx = new Range(other.Position.x, other.Position.x + other.Bounds.x);
+            Range thisy = new Range(offsetPosition.y, offsetPosition.y + Bounds.y);
+            Range othery = new Range(other.Position.y, other.Position.y + other.Bounds.y);
+            if (!thisx.Overlaps(otherx) || !thisy.Overlaps(othery))
+                return false;
+
+            Range overlap_x = thisx.GetOverlap(otherx);
+            Range overlap_y = thisy.GetOverlap(othery);
+
+            Range check_thisx = new Range(overlap_x.Start.Value - offsetPosition.x, overlap_x.End.Value - offsetPosition.x);
+            Range check_thisy = new Range(overlap_y.Start.Value - offsetPosition.y, overlap_y.End.Value - offsetPosition.y);
+            Range check_otherx = new Range(overlap_x.Start.Value - other.Position.x, overlap_x.End.Value - other.Position.x);
+            Range check_othery = new Range(overlap_y.Start.Value - other.Position.y, overlap_y.End.Value - other.Position.y);
+
+            Vector2Int[] thisUnits = Units.Select(k => k += offsetPosition).Where(u => (u.x >= check_thisx.Start.Value && u.x <= check_thisx.End.Value)
+            && (u.y >= check_thisy.Start.Value && u.y <= check_thisy.End.Value)).ToArray();
+
+            Vector2Int[] otherUnits = other.Units.Select(k => k += other.Position).Where(u => (u.x >= check_otherx.Start.Value && u.x <= check_otherx.End.Value)
+            && (u.y >= check_othery.Start.Value && u.y <= check_othery.End.Value)).ToArray();
+
+            foreach (Vector2Int unit in thisUnits)
+                foreach (Vector2Int otherUnit in otherUnits)
+                    if (unit.Equals(otherUnit))
+                        return true;
+
+            return false;
         }
 
         public Rock Copy()

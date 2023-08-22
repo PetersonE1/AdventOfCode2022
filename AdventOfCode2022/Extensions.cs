@@ -88,6 +88,26 @@ namespace AdventOfCode2022
             return false;
         }
 
+        public static Range GetOverlap(this Range r1, Range r2)
+        {
+            if (!r1.Overlaps(r2)) return new Range(0, 0);
+
+            int start = 0;
+            int end = 0;
+
+            if (r1.Start.Value >= r2.Start.Value)
+                start = r1.Start.Value;
+            else
+                start = r2.Start.Value;
+
+            if (r1.End.Value >= r2.End.Value)
+                end = r2.End.Value;
+            else
+                end = r1.End.Value;
+
+            return new Range(start, end);
+        }
+
         public static T[] CloneExcluding<T>(this T[] array, int[] indexes)
         {
             List<T> values = new List<T>();
