@@ -128,6 +128,21 @@ namespace AdventOfCode2022.Days
             return Position + offset;
         }
 
+        public bool CheckCollision(Rock other)
+        {
+            Range thisx = new Range(Position.x, Position.x + Bounds.x);
+            Range otherx = new Range(other.Position.x, other.Position.x + other.Bounds.x);
+            Range thisy = new Range(Position.y, Position.y + Bounds.y);
+            Range othery = new Range(other.Position.y, other.Position.y + other.Bounds.y);
+            if (!thisx.Overlaps(otherx) && !thisy.Overlaps(othery))
+                return false;
+
+            // TODO: check collision of individual units; filter units to those inside overlapping bounds
+
+            // DEBUG
+            return true;
+        }
+
         public Rock Copy()
         {
             return new Rock(Bounds, Units);
