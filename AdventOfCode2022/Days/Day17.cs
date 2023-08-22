@@ -10,26 +10,56 @@ namespace AdventOfCode2022.Days
     {
         public static int Tetris(string input)
         {
+            List<Rock> PlacedRocks = new List<Rock>();
             Rock[] RockTypes = InitializeRocks();
 
+            Rock? heighestRock = null;
             for (int i = 0; i <= 2022; i++)
             {
-                int jetIndex = i;
-                while (jetIndex >= input.Length)
-                    jetIndex -= input.Length;
-
                 int rockIndex = i;
                 while (rockIndex >= RockTypes.Length)
                     rockIndex -= RockTypes.Length;
 
                 bool landed = false;
+                Rock activeRock = RockTypes[rockIndex].Copy();
+                PlacedRocks.Add(activeRock);
+
+                Vector2Int start = heighestRock != null ? 
+                    new Vector2Int(1, heighestRock.Position.y + heighestRock.Bounds.y + 3) : new Vector2Int(1, 2);
+
+                int jetIndex = 0;
                 while (!landed)
                 {
+                    while (jetIndex >= input.Length)
+                        jetIndex -= input.Length;
 
+                    Vector2Int jetPush = new Vector2Int(-1, 0);
+                    if (input[jetIndex] == '>')
+                        jetPush = new Vector2Int(1, 0);
+
+                    Vector2Int target = activeRock.TryShift(jetPush);
+                    if (target.x != 7 && target.x != 0 /*&& TODO check other rocks*/)
+                    {
+                        activeRock.Shift(jetPush);
+                    }
+                    if (target.y != 0 /*&& TODO check other rocks*/)
+                    {
+                        activeRock.Shift(new Vector2Int(0, -1));
+                        continue;
+                    }
+
+                    if (heighestRock == null)
+                        heighestRock = activeRock;
+                    landed = true;
+                    break;
                 }
+
+                landed = false;
+                if (activeRock.Position.y + activeRock.Bounds.y > heighestRock.Position.y + heighestRock.Bounds.y)
+                    heighestRock = activeRock;
             }
 
-            return 0;
+            return heighestRock.Position.y + heighestRock.Bounds.y;
         }
 
         private static Rock[] InitializeRocks()
@@ -74,11 +104,27 @@ namespace AdventOfCode2022.Days
     {
         public Vector2Int[] Units;
         public Vector2Int Bounds;
+        public Vector2Int Position = new Vector2Int(0, 0);
 
         public Rock(Vector2Int bounds, Vector2Int[] units)
         {
             Units = units;
             Bounds = bounds;
+        }
+
+        public void SetPosition(Vector2Int position)
+        {
+            Position = position;
+        }
+
+        public void Shift(Vector2Int offset)
+        {
+            Position += offset;
+        }
+
+        public Vector2Int TryShift(Vector2Int offset)
+        {
+            return Position + offset;
         }
 
         public Rock Copy()
