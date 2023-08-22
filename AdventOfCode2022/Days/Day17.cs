@@ -36,6 +36,7 @@ namespace AdventOfCode2022.Days
                     Vector2Int jetPush = new Vector2Int(-1, 0);
                     if (input[jetIndex] == '>')
                         jetPush = new Vector2Int(1, 0);
+                    jetIndex++;
 
                     Vector2Int target = activeRock.TryShift(jetPush);
                     if (target.x != 7 && target.x != 0 /*&& TODO check other rocks*/)
